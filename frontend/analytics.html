@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics - Office Automation</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>🏢 OfficeApp</h2>
+    </div>
+    
+    <div class="sidebar-nav">
+      <a href="dashboard.html" id="nav-dashboard">📊 Dashboard</a>
+      <a href="tasks.html" id="nav-tasks">✅ Tasks</a>
+      <a href="messages.html" id="nav-messages">✉️ Messages</a>
+      <a href="documents.html" id="nav-documents">📄 Documents</a>
+      <a href="calendar.html" id="nav-calendar">📅 Calendar</a>
+      <a href="leaves.html" id="nav-leaves">🏖️ Leaves</a>
+      <a href="employees.html" id="nav-employees">👥 Employees</a>
+      <a href="finance.html" id="nav-finance">💰 Finance</a>
+      <a href="inventory.html" id="nav-inventory">📦 Inventory</a>
+      <a href="resources.html" id="nav-resources">⚙️ Resources</a>
+      <a href="performance.html" id="nav-performance">⭐ Performance</a>
+      <a href="analytics.html" id="nav-analytics" class="active">📈 Analytics</a>
+      <a href="user-management.html" id="nav-users" style="display: none;">👤 User Management</a>
+    </div>
+
+    <div class="sidebar-footer">
+      <button onclick="logout(event)">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="container">
+    <div class="grid">
+      <div class="card">
+        <h3>📋 Task Status Distribution</h3>
+        <div id="taskStats">Loading...</div>
+      </div>
+
+      <div class="card">
+        <h3>🏢 Department-wise Tasks</h3>
+        <div id="deptStats">Loading...</div>
+      </div>
+
+      <div class="card">
+        <h3>👥 User Activity</h3>
+        <div id="activityStats">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+
+    function init() {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+      currentUser = user;
+      loadAnalytics();
+    }
+
+    function loadAnalytics() {
+      // Task Statistics
+      fetch("http://localhost:3000/api/analytics/tasks", {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          const taskStats = document.getElementById("taskStats");
+          if (!data || data.length === 0) {
+            taskStats.innerHTML = '<p>No data available</p>';
+            return;
+          }
+          taskStats.innerHTML = data.map(d => `
+            <p><strong>${d.status}:</strong> ${d.count} tasks</p>
+          `).join("");
+        })
+        .catch(() => {
+          document.getElementById("taskStats").innerHTML = '<p style="color: red;">Error loading data</p>';
+        });
+
+      // Department Statistics
+      fetch("http://localhost:3000/api/analytics/departments", {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          const deptStats = document.getElementById("deptStats");
+          if (!data || data.length === 0) {
+            deptStats.innerHTML = '<p>No data available</p>';
+            return;
+          }
+          deptStats.innerHTML = data.map(d => `
+            <p><strong>${d.department}:</strong> ${d.count} tasks</p>
+          `).join("");
+        })
+        .catch(() => {
+          document.getElementById("deptStats").innerHTML = '<p style="color: red;">Error loading data</p>';
+        });
+
+      // User Activity
+      fetch("http://localhost:3000/api/analytics/activity", {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          const activityStats = document.getElementById("activityStats");
+          if (!data || data.length === 0) {
+            activityStats.innerHTML = '<p>No data available</p>';
+            return;
+          }
+          activityStats.innerHTML = data.map(d => `
+            <p><strong>${d.name}:</strong> ${d.taskCount} tasks</p>
+          `).join("");
+        })
+        .catch(err => console.error(err));
+    }
+
+    function logout(e) {
+      e.preventDefault();
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>

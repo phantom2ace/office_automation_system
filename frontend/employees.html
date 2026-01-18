@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employees - Office Automation</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>🏢 OfficeApp</h2>
+    </div>
+    
+    <div class="sidebar-nav">
+      <a href="dashboard.html" id="nav-dashboard">📊 Dashboard</a>
+      <a href="tasks.html" id="nav-tasks">✅ Tasks</a>
+      <a href="messages.html" id="nav-messages">✉️ Messages</a>
+      <a href="documents.html" id="nav-documents">📄 Documents</a>
+      <a href="calendar.html" id="nav-calendar">📅 Calendar</a>
+      <a href="leaves.html" id="nav-leaves">🏖️ Leaves</a>
+      <a href="employees.html" id="nav-employees" class="active">👥 Employees</a>
+      <a href="finance.html" id="nav-finance">💰 Finance</a>
+      <a href="inventory.html" id="nav-inventory">📦 Inventory</a>
+      <a href="resources.html" id="nav-resources">⚙️ Resources</a>
+      <a href="performance.html" id="nav-performance">⭐ Performance</a>
+      <a href="analytics.html" id="nav-analytics">📈 Analytics</a>
+      <a href="user-management.html" id="nav-users" style="display: none;">👤 User Management</a>
+    </div>
+
+    <div class="sidebar-footer">
+      <button onclick="logout(event)">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="container">
+      <div id="message" class="alert" style="display: none;"></div>
+
+      <div class="card">
+        <h3>📊 HR Statistics</h3>
+        <div class="grid">
+          <div style="text-align: center;">
+            <h4 id="totalEmp">0</h4>
+            <p>Total Employees</p>
+          </div>
+          <div style="text-align: center;">
+            <h4 id="totalDept">0</h4>
+            <p>Departments</p>
+          </div>
+          <div style="text-align: center;">
+            <h4 id="onLeave">0</h4>
+            <p>On Leave Today</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>👤 Employee Directory</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Department</th>
+              <th>Role</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="employeeTable">
+            <tr>
+              <td colspan="7" style="text-align: center;">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="empModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h3>Employee Details</h3>
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="empName" readonly>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="empEmail" readonly>
+        </div>
+        <div class="form-group">
+          <label>Department</label>
+          <input type="text" id="empDept" readonly>
+        </div>
+        <div class="form-group">
+          <label>Designation</label>
+          <input type="text" id="empDesig" readonly>
+        </div>
+        <div class="form-group">
+          <label>Phone</label>
+          <input type="text" id="empPhone" readonly>
+        </div>
+        <div class="form-group">
+          <label>Joining Date</label>
+          <input type="text" id="empJoining" readonly>
+        </div>
+        <button onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+
+    function loadPage() {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) {
+        window.location.href = "dashboard.html";
+        return;
+      }
+      currentUser = user;
+      
+      // Check if user is authorized (Admin or HR)
+      if (user.role !== "Admin" && user.department !== "HR") {
+        document.querySelector('.container').innerHTML = '<div style="padding: 40px; text-align: center; color: red;"><h3>Access Denied</h3><p>Only Admin and HR staff can view the Employee Directory.</p><a href="dashboard.html" style="padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px;">Back to Dashboard</a></div>';
+        return;
+      }
+      
+      loadEmployees();
+      loadStats();
+    }
+      loadStats();
+    }
+
+    function loadEmployees() {
+      fetch(`http://localhost:3000/api/employees/`, {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role,
+          "department": currentUser.department
+        }
+      })
+        .then(res => res.json())
+        .then(employees => {
+          const tbody = document.getElementById("employeeTable");
+          if (!employees || employees.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7">No employees found</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = employees.map(e => `
+            <tr>
+              <td>${e.name}</td>
+              <td>${e.department}</td>
+              <td>${e.role}</td>
+              <td>${e.email}</td>
+              <td>${e.phone || '-'}</td>
+              <td><span class="badge ${e.status.toLowerCase()}">${e.status}</span></td>
+              <td><button onclick="openModal(${e.id})" style="width: 100%; padding: 5px;">View</button></td>
+            </tr>
+          `).join("");
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById("employeeTable").innerHTML = '<tr><td colspan="7" style="color: red;">Error loading employees</td></tr>';
+        });
+    }
+
+    function loadStats() {
+      fetch(`http://localhost:3000/api/employees/analytics/summary`, {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role,
+          "department": currentUser.department
+        }
+      })
+        .then(res => res.json())
+        .then(stats => {
+          document.getElementById("totalEmp").textContent = stats.totalEmployees || 0;
+          document.getElementById("totalDept").textContent = stats.totalDepartments || 0;
+          document.getElementById("onLeave").textContent = stats.onLeaveToday || 0;
+        })
+        .catch(err => console.error(err));
+    }
+
+    function openModal(empId) {
+      fetch(`http://localhost:3000/api/employees/${empId}`, {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role,
+          "department": currentUser.department
+        }
+      })
+        .then(res => res.json())
+        .then(emp => {
+          document.getElementById("empName").value = emp.name || '';
+          document.getElementById("empEmail").value = emp.email || '';
+          document.getElementById("empDept").value = emp.department || '';
+          document.getElementById("empDesig").value = emp.designation || '';
+          document.getElementById("empPhone").value = emp.phone || '';
+          document.getElementById("empJoining").value = emp.joiningDate || '';
+          document.getElementById("empModal").classList.add("active");
+        })
+        .catch(err => console.error(err));
+    }
+
+    function closeModal() {
+      document.getElementById("empModal").classList.remove("active");
+    }
+
+    function logout(e) {
+      e.preventDefault();
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+    }
+
+    window.onload = function() {
+      loadPage();
+      // Show user management link for admins
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user && user.role === 'Admin') {
+        const navUsers = document.getElementById('nav-users');
+        if (navUsers) navUsers.style.display = 'block';
+      }
+      // Check if user is authorized to view employees (Admin or HR)
+      if (user && (user.role === 'Admin' || user.department === 'HR')) {
+        // User is authorized
+      } else {
+        document.querySelector('.container').innerHTML = '<div style="padding: 20px; text-align: center; color: red;"><h3>Access Denied</h3><p>Only Admin and HR staff can view the Employee Directory.</p></div>';
+      }
+    };
+  </script>
+</body>
+</html>

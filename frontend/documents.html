@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documents - Office Automation</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>🏢 OfficeApp</h2>
+    </div>
+    
+    <div class="sidebar-nav">
+      <a href="dashboard.html" id="nav-dashboard">📊 Dashboard</a>
+      <a href="tasks.html" id="nav-tasks">✅ Tasks</a>
+      <a href="messages.html" id="nav-messages">✉️ Messages</a>
+      <a href="documents.html" id="nav-documents" class="active">📄 Documents</a>
+      <a href="calendar.html" id="nav-calendar">📅 Calendar</a>
+      <a href="leaves.html" id="nav-leaves">🏖️ Leaves</a>
+      <a href="employees.html" id="nav-employees">👥 Employees</a>
+      <a href="finance.html" id="nav-finance">💰 Finance</a>
+      <a href="inventory.html" id="nav-inventory">📦 Inventory</a>
+      <a href="resources.html" id="nav-resources">⚙️ Resources</a>
+      <a href="performance.html" id="nav-performance">⭐ Performance</a>
+      <a href="analytics.html" id="nav-analytics">📈 Analytics</a>
+      <a href="user-management.html" id="nav-users" style="display: none;">👤 User Management</a>
+    </div>
+
+    <div class="sidebar-footer">
+      <button onclick="logout(event)">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="container">
+    <div id="message" class="alert" style="display: none;"></div>
+
+    <div class="card">
+      <h3>📤 Upload Document</h3>
+      <form id="docForm" enctype="multipart/form-data">
+        <div class="form-group">
+          <label>Select File</label>
+          <input type="file" name="document" id="docInput" required>
+        </div>
+        <button type="button" onclick="uploadDocument()">Upload</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>📋 Document List</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Filename</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="docList">
+          <tr>
+            <td colspan="2" style="text-align: center;">Loading...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+
+    function loadDocuments() {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+      currentUser = user;
+
+      const docList = document.getElementById("docList");
+      docList.innerHTML = '<tr><td colspan="2" style="text-align: center;">📁 No documents uploaded yet</td></tr>';
+    }
+
+    function uploadDocument() {
+      const fileInput = document.getElementById("docInput");
+      if (!fileInput.files.length) {
+        showMessage("Please select a file", "error");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("document", fileInput.files[0]);
+
+      fetch("http://localhost:3000/api/documents/upload", {
+        method: "POST",
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role
+        },
+        body: formData
+      })
+        .then(res => res.json())
+        .then(() => {
+          showMessage("Document uploaded successfully!", "success");
+          fileInput.value = "";
+          loadDocuments();
+        })
+        .catch(() => showMessage("Error uploading document", "error"));
+    }
+
+    function showMessage(msg, type) {
+      const div = document.getElementById("message");
+      div.textContent = msg;
+      div.className = `alert ${type}`;
+      div.style.display = "block";
+    }
+
+    function logout(e) {
+      e.preventDefault();
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+    }
+
+    window.onload = loadDocuments;
+  </script>
+  </div>
+</body>
+</html>

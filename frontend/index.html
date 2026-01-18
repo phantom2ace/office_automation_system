@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Office Automation - Login</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-page">
+  <div class="container">
+    <div class="login-box">
+      <h2>🏢 Office Automation System</h2>
+      <div id="message" class="alert" style="display: none;"></div>
+      
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" placeholder="Enter your email">
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password">
+      </div>
+
+      <button onclick="login()">Login</button>
+
+      <div style="margin-top: 20px; text-align: center; color: #666; font-size: 12px;">
+        &copy; 2024 Office Automation System. All rights reserved.
+      </div>
+    </div>
+  </div>
+
+  <script src="js/login.js"></script>
+</body>
+</html>

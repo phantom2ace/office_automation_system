@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Performance - Office Automation</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>🏢 OfficeApp</h2>
+    </div>
+    
+    <div class="sidebar-nav">
+      <a href="dashboard.html" id="nav-dashboard">📊 Dashboard</a>
+      <a href="tasks.html" id="nav-tasks">✅ Tasks</a>
+      <a href="messages.html" id="nav-messages">✉️ Messages</a>
+      <a href="documents.html" id="nav-documents">📄 Documents</a>
+      <a href="calendar.html" id="nav-calendar">📅 Calendar</a>
+      <a href="leaves.html" id="nav-leaves">🏖️ Leaves</a>
+      <a href="employees.html" id="nav-employees">👥 Employees</a>
+      <a href="finance.html" id="nav-finance">💰 Finance</a>
+      <a href="inventory.html" id="nav-inventory">📦 Inventory</a>
+      <a href="resources.html" id="nav-resources">⚙️ Resources</a>
+      <a href="performance.html" id="nav-performance" class="active">⭐ Performance</a>
+      <a href="analytics.html" id="nav-analytics">📈 Analytics</a>
+      <a href="user-management.html" id="nav-users" style="display: none;">👤 User Management</a>
+    </div>
+
+    <div class="sidebar-footer">
+      <button onclick="logout(event)">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+
+  <div class="container">
+    <div id="message" class="alert" style="display: none;"></div>
+
+    <div id="reviewSection" class="card" style="display: none;">
+      <h3>📝 Create Performance Review</h3>
+      <div class="grid">
+        <div>
+          <label>Employee</label>
+          <select id="reviewEmpId">
+            <option value="">Select Employee</option>
+          </select>
+        </div>
+        <div>
+          <label>Review Period</label>
+          <input type="month" id="reviewPeriod">
+        </div>
+      </div>
+      <div class="grid">
+        <div>
+          <label>Tasks Completed</label>
+          <input type="number" id="tasksCompleted" min="0">
+        </div>
+        <div>
+          <label>Tasks Overdue</label>
+          <input type="number" id="tasksOverdue" min="0">
+        </div>
+        <div>
+          <label>Efficiency %</label>
+          <input type="number" id="efficiency" min="0" max="100">
+        </div>
+        <div>
+          <label>Attendance %</label>
+          <input type="number" id="attendance" min="0" max="100">
+        </div>
+      </div>
+      <div class="grid">
+        <div>
+          <label>Overall Rating (1-5)</label>
+          <select id="rating">
+            <option value="">Select Rating</option>
+            <option value="1">Poor (1)</option>
+            <option value="2">Below Average (2)</option>
+            <option value="3">Average (3)</option>
+            <option value="4">Good (4)</option>
+            <option value="5">Excellent (5)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Comments</label>
+        <textarea id="comments" rows="3" placeholder="Review comments"></textarea>
+      </div>
+      <button onclick="submitReview()">Submit Review</button>
+    </div>
+
+    <div class="card">
+      <h3>📊 Performance Reviews</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Period</th>
+            <th>Tasks Done</th>
+            <th>Efficiency</th>
+            <th>Attendance</th>
+            <th>Rating</th>
+            <th>Reviewed By</th>
+          </tr>
+        </thead>
+        <tbody id="reviewTable">
+          <tr>
+            <td colspan="7" style="text-align: center;">Loading...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+
+    function loadPage() {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+      currentUser = user;
+      loadReviews();
+      if (user.role === "Manager") {
+        document.getElementById("reviewSection").style.display = "block";
+        loadEmployeesForReview();
+      }
+    }
+
+    function loadReviews() {
+      fetch(`http://localhost:3000/api/performance/all`, {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role
+        }
+      })
+        .then(res => res.json())
+        .then(reviews => {
+          const tbody = document.getElementById("reviewTable");
+          if (!reviews || reviews.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7">No performance reviews yet</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = reviews.map(r => `
+            <tr>
+              <td>${r.employeeName}</td>
+              <td>${r.period}</td>
+              <td>${r.tasksCompleted}</td>
+              <td>${r.efficiency}%</td>
+              <td>${r.attendance}%</td>
+              <td>${r.rating || '-'} ⭐</td>
+              <td>${r.reviewerName || 'Pending'}</td>
+            </tr>
+          `).join("");
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById("reviewTable").innerHTML = '<tr><td colspan="7" style="color: red;">Error loading reviews</td></tr>';
+        });
+    }
+
+    function loadEmployeesForReview() {
+      fetch(`http://localhost:3000/api/employees/`, {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role
+        }
+      })
+        .then(res => res.json())
+        .then(employees => {
+          const select = document.getElementById("reviewEmpId");
+          employees.forEach(e => {
+            const option = document.createElement("option");
+            option.value = e.id;
+            option.textContent = `${e.name} (${e.department})`;
+            select.appendChild(option);
+          });
+        })
+        .catch(err => console.error(err));
+    }
+
+    function submitReview() {
+      const empId = document.getElementById("reviewEmpId").value;
+      const period = document.getElementById("reviewPeriod").value;
+      const tasksCompleted = document.getElementById("tasksCompleted").value;
+      const tasksOverdue = document.getElementById("tasksOverdue").value;
+      const efficiency = document.getElementById("efficiency").value;
+      const attendance = document.getElementById("attendance").value;
+      const rating = document.getElementById("rating").value;
+      const comments = document.getElementById("comments").value;
+
+      if (!empId || !period || !rating) {
+        showMessage("Please fill in all required fields", "error");
+        return;
+      }
+
+      fetch("http://localhost:3000/api/performance/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "userid": currentUser.id,
+          "role": currentUser.role
+        },
+        body: JSON.stringify({
+          userId: parseInt(empId),
+          period,
+          tasksCompleted: parseInt(tasksCompleted) || 0,
+          tasksOverdue: parseInt(tasksOverdue) || 0,
+          efficiency: parseFloat(efficiency) || 0,
+          attendance: parseFloat(attendance) || 0,
+          rating: parseFloat(rating),
+          comments
+        })
+      })
+        .then(res => res.json())
+        .then(() => {
+          showMessage("Performance review submitted!", "success");
+          document.getElementById("reviewEmpId").value = "";
+          document.getElementById("reviewPeriod").value = "";
+          document.getElementById("tasksCompleted").value = "";
+          document.getElementById("tasksOverdue").value = "";
+          document.getElementById("efficiency").value = "";
+          document.getElementById("attendance").value = "";
+          document.getElementById("rating").value = "";
+          document.getElementById("comments").value = "";
+          loadReviews();
+        })
+        .catch(() => showMessage("Error submitting review", "error"));
+    }
+
+    function logout(e) {
+      e.preventDefault();
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+    }
+
+    window.onload = loadReviews;
+  </script>
+  </div>
+</body>
+</html>

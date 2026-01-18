@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Office Automation</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>🏢 OfficeApp</h2>
+    </div>
+    
+    <div class="sidebar-nav">
+      <a href="dashboard.html" id="nav-dashboard" class="active">📊 Dashboard</a>
+      <a href="tasks.html" id="nav-tasks">✅ Tasks</a>
+      <a href="messages.html" id="nav-messages">✉️ Messages</a>
+      <a href="documents.html" id="nav-documents">📄 Documents</a>
+      <a href="calendar.html" id="nav-calendar">📅 Calendar</a>
+      <a href="leaves.html" id="nav-leaves">🏖️ Leaves</a>
+      <a href="employees.html" id="nav-employees">👥 Employees</a>
+      <a href="finance.html" id="nav-finance">💰 Finance</a>
+      <a href="inventory.html" id="nav-inventory">📦 Inventory</a>
+      <a href="resources.html" id="nav-resources">⚙️ Resources</a>
+      <a href="performance.html" id="nav-performance">⭐ Performance</a>
+      <a href="analytics.html" id="nav-analytics">📈 Analytics</a>
+      <a href="user-management.html" id="nav-users" style="display: none;">👤 User Management</a>
+    </div>
+
+    <div class="sidebar-footer">
+      <button onclick="logout(event)">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="container">
+      <div id="message" class="alert" style="display: none;"></div>
+
+      <div class="card">
+        <h3>Welcome, <span id="userName">User</span>! 👋</h3>
+        <p>Department: <strong id="userDept">-</strong></p>
+        <p>Role: <strong id="userRole">-</strong></p>
+        <p id="departmentMsg" style="color: #667eea; font-weight: bold; margin-top: 10px;"></p>
+      </div>
+
+      <div id="departmentTools" style="display: none;">
+        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+          <h3>🔧 Department Tools</h3>
+          <p id="toolsDescription"></p>
+          <div id="departmentButtons"></div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h3>📋 Quick Stats</h3>
+          <p>Total Tasks: <strong id="taskCount">0</strong></p>
+          <p>Pending: <strong id="pendingCount">0</strong></p>
+          <p>Completed: <strong id="completedCount">0</strong></p>
+        </div>
+
+        <div class="card">
+          <h3>✉️ Messages</h3>
+          <p>Unread: <strong id="messageCount">0</strong></p>
+          <button onclick="location.href='messages.html'">Go to Messages</button>
+        </div>
+
+        <div class="card">
+          <h3>📄 Documents</h3>
+          <p>Total Files: <strong id="docCount">0</strong></p>
+          <button onclick="location.href='documents.html'">View Documents</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📝 Recent Tasks</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Department</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="taskTable">
+            <tr>
+              <td colspan="4" style="text-align: center;">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+
+    function showDepartmentTools() {
+      const dept = currentUser.department;
+      const toolsDiv = document.getElementById("departmentTools");
+      const buttonsDiv = document.getElementById("departmentButtons");
+      const descDiv = document.getElementById("toolsDescription");
+
+      let tools = {};
+      switch(dept) {
+        case "Finance":
+          tools = {
+            description: "Access financial tools including calculator, expense tracking, and reports",
+            buttons: [
+              { text: "🧮 Finance Calculator", link: "calculator.html" },
+              { text: "💰 Expense Tracking", link: "finance.html" }
+            ]
+          };
+          break;
+        case "IT":
+          tools = {
+            description: "Manage IT operations including help desk tickets and resource management",
+            buttons: [
+              { text: "🆘 Help Desk", link: "helpdesk.html" },
+              { text: "🖥️ Resources", link: "resources.html" }
+            ]
+          };
+          break;
+        case "HR":
+          tools = {
+            description: "Manage human resources including employee records and leave management",
+            buttons: [
+              { text: "👥 Employee Management", link: "employees.html" },
+              { text: "🏖️ Leave Management", link: "leaves.html" }
+            ]
+          };
+          break;
+        case "Sales":
+          tools = {
+            description: "Track sales activities and performance metrics",
+            buttons: [
+              { text: "📊 Analytics", link: "analytics.html" },
+              { text: "⭐ Performance", link: "performance.html" }
+            ]
+          };
+          break;
+        default:
+          tools = {
+            description: "Access your department-specific tools and features",
+            buttons: []
+          };
+      }
+
+      if (tools.buttons.length > 0) {
+        descDiv.textContent = tools.description;
+        buttonsDiv.innerHTML = tools.buttons
+          .map(btn => `<button onclick="location.href='${btn.link}'" style="margin: 5px; padding: 10px 15px; background: white; color: #667eea; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">${btn.text}</button>`)
+          .join("");
+        toolsDiv.style.display = "block";
+      }
+    }
+
+    function loadDashboard() {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      currentUser = user;
+      document.getElementById("userName").textContent = user.name;
+      document.getElementById("userDept").textContent = user.department || "N/A";
+      document.getElementById("userRole").textContent = user.role || "N/A";
+
+      showDepartmentTools();
+      loadTasks();
+      loadStats();
+    }
+
+    function loadTasks() {
+      fetch(`http://localhost:3000/api/tasks/${currentUser.id}`, {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role
+        }
+      })
+        .then(res => res.json())
+        .then(tasks => {
+          const tbody = document.getElementById("taskTable");
+          if (tasks.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No tasks assigned</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = tasks.slice(0, 5).map(task => `
+            <tr>
+              <td>${task.title}</td>
+              <td>${task.department}</td>
+              <td><span class="badge ${task.status.toLowerCase()}">${task.status}</span></td>
+              <td><button onclick="viewTask(${task.id})" style="width: 100%; padding: 5px;">View</button></td>
+            </tr>
+          `).join("");
+        })
+        .catch(err => console.error(err));
+    }
+
+    function loadStats() {
+      fetch(`http://localhost:3000/api/tasks/${currentUser.id}`, {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role
+        }
+      })
+        .then(res => res.json())
+        .then(tasks => {
+          document.getElementById("taskCount").textContent = tasks.length;
+          const pending = tasks.filter(t => t.status === "Pending").length;
+          const completed = tasks.filter(t => t.status === "Completed").length;
+          document.getElementById("pendingCount").textContent = pending;
+          document.getElementById("completedCount").textContent = completed;
+        })
+        .catch(err => console.error(err));
+    }
+
+    function viewTask(taskId) {
+      alert("Viewing task " + taskId);
+    }
+
+    function logout(e) {
+      e.preventDefault();
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+    }
+
+    window.onload = function() {
+      loadDashboard();
+      // Show user management link for admins
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user && user.role === 'Admin') {
+        const navUsers = document.getElementById('nav-users');
+        if (navUsers) navUsers.style.display = 'block';
+      }
+      // Hide employees link for non-authorized users
+      if (user && !(user.role === 'Admin' || user.department === 'HR')) {
+        const empLink = document.getElementById('nav-employees');
+        if (empLink) empLink.style.display = 'none';
+      }
+      
+      // Auto-refresh tasks and stats every 5 seconds for real-time updates
+      setInterval(loadTasks, 5000);
+      setInterval(loadStats, 5000);
+    };
+  </script>
+</body>
+</html>
+

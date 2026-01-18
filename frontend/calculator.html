@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finance Calculator - Office Automation</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .calculator-container {
+      background: white;
+      border-radius: 10px;
+      padding: 30px;
+      max-width: 600px;
+      margin: 20px auto;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .calc-display {
+      background: #333;
+      color: #0f0;
+      font-size: 32px;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: right;
+      margin-bottom: 20px;
+      font-family: 'Courier New', monospace;
+      min-height: 50px;
+      word-wrap: break-word;
+    }
+
+    .calc-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .calc-btn {
+      padding: 20px;
+      font-size: 18px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      cursor: pointer;
+      background: #f5f5f5;
+      transition: 0.3s;
+    }
+
+    .calc-btn:hover {
+      background: #667eea;
+      color: white;
+    }
+
+    .calc-btn.operator {
+      background: #667eea;
+      color: white;
+    }
+
+    .calc-btn.equals {
+      background: #28a745;
+      color: white;
+      grid-column: span 2;
+    }
+
+    .calc-btn.clear {
+      background: #dc3545;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>🏢 OfficeApp</h2>
+    </div>
+    
+    <div class="sidebar-nav">
+      <a href="dashboard.html" id="nav-dashboard">📊 Dashboard</a>
+      <a href="tasks.html" id="nav-tasks">✅ Tasks</a>
+      <a href="messages.html" id="nav-messages">✉️ Messages</a>
+      <a href="documents.html" id="nav-documents">📄 Documents</a>
+      <a href="calendar.html" id="nav-calendar">📅 Calendar</a>
+      <a href="leaves.html" id="nav-leaves">🏖️ Leaves</a>
+      <a href="employees.html" id="nav-employees">👥 Employees</a>
+      <a href="finance.html" id="nav-finance">💰 Finance</a>
+      <a href="calculator.html" id="nav-calculator" class="active">🧮 Calculator</a>
+      <a href="inventory.html" id="nav-inventory">📦 Inventory</a>
+      <a href="resources.html" id="nav-resources">⚙️ Resources</a>
+      <a href="performance.html" id="nav-performance">⭐ Performance</a>
+      <a href="analytics.html" id="nav-analytics">📈 Analytics</a>
+    </div>
+
+    <div class="sidebar-footer">
+      <button onclick="logout(event)">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="container">
+      <h1>💰 Finance Calculator</h1>
+      <p style="text-align: center; color: #666;">Quick calculations for financial operations</p>
+
+      <div class="calculator-container">
+        <div class="calc-display" id="calcDisplay">0</div>
+        <div class="calc-buttons">
+          <button class="calc-btn clear" onclick="clearCalc()">C</button>
+          <button class="calc-btn" onclick="deleteChar()">&larr;</button>
+          <button class="calc-btn" onclick="appendOperator('%')">%</button>
+          <button class="calc-btn operator" onclick="appendOperator('÷')">÷</button>
+
+          <button class="calc-btn" onclick="appendNumber('7')">7</button>
+          <button class="calc-btn" onclick="appendNumber('8')">8</button>
+          <button class="calc-btn" onclick="appendNumber('9')">9</button>
+          <button class="calc-btn operator" onclick="appendOperator('×')">×</button>
+
+          <button class="calc-btn" onclick="appendNumber('4')">4</button>
+          <button class="calc-btn" onclick="appendNumber('5')">5</button>
+          <button class="calc-btn" onclick="appendNumber('6')">6</button>
+          <button class="calc-btn operator" onclick="appendOperator('-')">-</button>
+
+          <button class="calc-btn" onclick="appendNumber('1')">1</button>
+          <button class="calc-btn" onclick="appendNumber('2')">2</button>
+          <button class="calc-btn" onclick="appendNumber('3')">3</button>
+          <button class="calc-btn operator" onclick="appendOperator('+')">+</button>
+
+          <button class="calc-btn" onclick="appendNumber('0')" style="grid-column: span 2;">0</button>
+          <button class="calc-btn" onclick="appendNumber('.')">.</button>
+          <button class="calc-btn equals" onclick="calculate()">=</button>
+        </div>
+      </div>
+
+      <!-- Financial Tools -->
+      <div class="card" style="margin-top: 30px;">
+        <h3>💡 Financial Calculation Tools</h3>
+        <div class="grid">
+          <div>
+            <h4>GST Calculator</h4>
+            <div class="form-group">
+              <label>Amount</label>
+              <input type="number" id="gstAmount" placeholder="Enter amount">
+            </div>
+            <div class="form-group">
+              <label>GST Rate (%)</label>
+              <select id="gstRate">
+                <option value="5">5%</option>
+                <option value="12" selected>12%</option>
+                <option value="18">18%</option>
+                <option value="28">28%</option>
+              </select>
+            </div>
+            <button onclick="calculateGST()">Calculate GST</button>
+            <p id="gstResult" style="margin-top: 10px; color: #667eea; font-weight: bold;"></p>
+          </div>
+
+          <div>
+            <h4>Discount Calculator</h4>
+            <div class="form-group">
+              <label>Original Price</label>
+              <input type="number" id="originalPrice" placeholder="Enter price">
+            </div>
+            <div class="form-group">
+              <label>Discount (%)</label>
+              <input type="number" id="discountPercent" placeholder="Enter discount %">
+            </div>
+            <button onclick="calculateDiscount()">Calculate</button>
+            <p id="discountResult" style="margin-top: 10px; color: #667eea; font-weight: bold;"></p>
+          </div>
+
+          <div>
+            <h4>Profit/Loss</h4>
+            <div class="form-group">
+              <label>Cost Price</label>
+              <input type="number" id="costPrice" placeholder="Enter cost">
+            </div>
+            <div class="form-group">
+              <label>Selling Price</label>
+              <input type="number" id="sellingPrice" placeholder="Enter selling price">
+            </div>
+            <button onclick="calculateProfitLoss()">Calculate</button>
+            <p id="profitLossResult" style="margin-top: 10px; color: #667eea; font-weight: bold;"></p>
+          </div>
+
+          <div>
+            <h4>Percentage Change</h4>
+            <div class="form-group">
+              <label>Old Value</label>
+              <input type="number" id="oldValue" placeholder="Enter old value">
+            </div>
+            <div class="form-group">
+              <label>New Value</label>
+              <input type="number" id="newValue" placeholder="Enter new value">
+            </div>
+            <button onclick="calculatePercentChange()">Calculate</button>
+            <p id="percentChangeResult" style="margin-top: 10px; color: #667eea; font-weight: bold;"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let display = "0";
+
+    function loadPage() {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user || user.department !== "Finance") {
+        // Non-finance users can still access but see limited features
+        console.log("Accessed by non-finance user");
+      }
+    }
+
+    function updateDisplay() {
+      document.getElementById("calcDisplay").textContent = display;
+    }
+
+    function appendNumber(num) {
+      if (display === "0" && num !== ".") {
+        display = num;
+      } else {
+        display += num;
+      }
+      updateDisplay();
+    }
+
+    function appendOperator(op) {
+      const converted = op === "÷" ? "/" : op === "×" ? "*" : op;
+      if (!display.endsWith(converted) && !display.endsWith("+") && !display.endsWith("-") && !display.endsWith("*") && !display.endsWith("/")) {
+        display += converted;
+      }
+      updateDisplay();
+    }
+
+    function calculate() {
+      try {
+        display = String(eval(display));
+        updateDisplay();
+      } catch (e) {
+        display = "Error";
+        updateDisplay();
+        setTimeout(() => { display = "0"; updateDisplay(); }, 1500);
+      }
+    }
+
+    function clearCalc() {
+      display = "0";
+      updateDisplay();
+    }
+
+    function deleteChar() {
+      display = display.slice(0, -1) || "0";
+      updateDisplay();
+    }
+
+    function calculateGST() {
+      const amount = parseFloat(document.getElementById("gstAmount").value);
+      const rate = parseFloat(document.getElementById("gstRate").value);
+      
+      if (isNaN(amount) || amount < 0) {
+        document.getElementById("gstResult").textContent = "Invalid amount";
+        return;
+      }
+
+      const gst = (amount * rate) / 100;
+      const total = amount + gst;
+      document.getElementById("gstResult").textContent = 
+        `GST: ₹${gst.toFixed(2)} | Total: ₹${total.toFixed(2)}`;
+    }
+
+    function calculateDiscount() {
+      const price = parseFloat(document.getElementById("originalPrice").value);
+      const discount = parseFloat(document.getElementById("discountPercent").value);
+      
+      if (isNaN(price) || isNaN(discount) || price < 0 || discount < 0) {
+        document.getElementById("discountResult").textContent = "Invalid input";
+        return;
+      }
+
+      const discountAmount = (price * discount) / 100;
+      const finalPrice = price - discountAmount;
+      document.getElementById("discountResult").textContent = 
+        `Discount: ₹${discountAmount.toFixed(2)} | Final Price: ₹${finalPrice.toFixed(2)}`;
+    }
+
+    function calculateProfitLoss() {
+      const cost = parseFloat(document.getElementById("costPrice").value);
+      const selling = parseFloat(document.getElementById("sellingPrice").value);
+      
+      if (isNaN(cost) || isNaN(selling) || cost < 0 || selling < 0) {
+        document.getElementById("profitLossResult").textContent = "Invalid input";
+        return;
+      }
+
+      const profitLoss = selling - cost;
+      const percentage = ((profitLoss / cost) * 100).toFixed(2);
+      const type = profitLoss >= 0 ? "Profit" : "Loss";
+      document.getElementById("profitLossResult").textContent = 
+        `${type}: ₹${Math.abs(profitLoss).toFixed(2)} (${percentage}%)`;
+    }
+
+    function calculatePercentChange() {
+      const old = parseFloat(document.getElementById("oldValue").value);
+      const newVal = parseFloat(document.getElementById("newValue").value);
+      
+      if (isNaN(old) || isNaN(newVal) || old === 0) {
+        document.getElementById("percentChangeResult").textContent = "Invalid input";
+        return;
+      }
+
+      const change = ((newVal - old) / old) * 100;
+      const type = change > 0 ? "↑ Increase" : "↓ Decrease";
+      document.getElementById("percentChangeResult").textContent = 
+        `${type}: ${Math.abs(change).toFixed(2)}%`;
+    }
+
+    function logout(e) {
+      e.preventDefault();
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+    }
+
+    window.onload = loadPage;
+  </script>
+</body>
+</html>

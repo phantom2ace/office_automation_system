@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workflow Automation - Office Automation</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .automation-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 20px;
+      margin: 20px 0;
+    }
+
+    .rule-card {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .rule-card:hover {
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      transform: translateY(-2px);
+    }
+
+    .rule-card.active {
+      border-left-color: #48bb78;
+      background: #f0fdf4;
+    }
+
+    .rule-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    .rule-trigger {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 3px;
+    }
+
+    .rule-action {
+      font-size: 12px;
+      color: #667eea;
+      margin-bottom: 3px;
+    }
+
+    .rule-status {
+      display: inline-block;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: #ddd;
+      color: #333;
+    }
+
+    .rule-status.active {
+      background: #48bb78;
+      color: white;
+    }
+
+    .rule-form {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .form-row.full {
+      grid-template-columns: 1fr;
+    }
+
+    .trigger-options,
+    .action-options {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+
+    .option-group {
+      margin-bottom: 10px;
+    }
+
+    .option-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .option-group input[type="radio"] {
+      margin-right: 8px;
+    }
+
+    .logs-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .logs-table th,
+    .logs-table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .logs-table th {
+      background: #f5f5f5;
+      font-weight: bold;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .status-completed {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-failed {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+    }
+
+    .btn-danger {
+      background: #f44336;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #da190b;
+    }
+
+    .btn-secondary {
+      background: #999;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #777;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>🏢 OfficeApp</h2>
+    </div>
+    
+    <div class="sidebar-nav">
+      <a href="dashboard.html" id="nav-dashboard">📊 Dashboard</a>
+      <a href="user-management.html" id="nav-users">👤 User Management</a>
+      <a href="email-config.html" id="nav-email">📧 Email Config</a>
+      <a href="workflow-automation.html" id="nav-automation" class="active">⚙️ Automation</a>
+    </div>
+
+    <div class="sidebar-footer">
+      <button onclick="logout(event)">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="container">
+      <h1>⚙️ Workflow Automation</h1>
+      <p>Create and manage automatic workflows that trigger actions based on system events.</p>
+
+      <div id="message" class="alert" style="display: none;"></div>
+
+      <div class="automation-grid">
+        <!-- Rules List -->
+        <div>
+          <h3>Automation Rules</h3>
+          <button class="btn-primary" onclick="newRule()" style="width: 100%; margin-bottom: 15px;">➕ New Rule</button>
+          <div id="rulesList">Loading rules...</div>
+        </div>
+
+        <!-- Rule Editor -->
+        <div id="ruleForm" class="rule-form" style="display: none;">
+          <h3 id="formTitle">New Automation Rule</h3>
+
+          <div class="form-row">
+            <input type="hidden" id="ruleId">
+            <input type="text" id="ruleName" placeholder="Rule Name" style="grid-column: span 2;">
+          </div>
+
+          <div class="form-row full">
+            <textarea id="ruleDescription" placeholder="Description" rows="2"></textarea>
+          </div>
+
+          <div class="trigger-options">
+            <h4>When this happens (Trigger)</h4>
+            <div class="option-group">
+              <label><input type="radio" name="trigger" value="task_assigned" onchange="updateTriggerParams()"> Task is assigned</label>
+            </div>
+            <div class="option-group">
+              <label><input type="radio" name="trigger" value="task_overdue" onchange="updateTriggerParams()"> Task becomes overdue</label>
+            </div>
+            <div class="option-group">
+              <label><input type="radio" name="trigger" value="task_completed" onchange="updateTriggerParams()"> Task is completed</label>
+            </div>
+            <div class="option-group">
+              <label><input type="radio" name="trigger" value="ticket_created" onchange="updateTriggerParams()"> Help desk ticket created</label>
+            </div>
+            <div class="option-group">
+              <label><input type="radio" name="trigger" value="approval_pending" onchange="updateTriggerParams()"> Approval request pending</label>
+            </div>
+            <div class="option-group">
+              <label><input type="radio" name="trigger" value="leave_request" onchange="updateTriggerParams()"> Leave request submitted</label>
+            </div>
+          </div>
+
+          <div class="action-options">
+            <h4>Then do this (Action)</h4>
+            <div class="option-group">
+              <label><input type="radio" name="action" value="send_email" onchange="updateActionParams()"> Send email notification</label>
+            </div>
+            <div class="option-group">
+              <label><input type="radio" name="action" value="assign_task" onchange="updateActionParams()"> Create new task</label>
+            </div>
+            <div class="option-group">
+              <label><input type="radio" name="action" value="escalate" onchange="updateActionParams()"> Escalate to manager</label>
+            </div>
+            <div class="option-group">
+              <label><input type="radio" name="action" value="update_status" onchange="updateActionParams()"> Update status automatically</label>
+            </div>
+            <div class="option-group">
+              <label><input type="radio" name="action" value="create_reminder" onchange="updateActionParams()"> Create reminder</label>
+            </div>
+          </div>
+
+          <div id="actionParams" style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 15px 0;">
+            <!-- Dynamic action parameters will be inserted here -->
+          </div>
+
+          <div class="form-row">
+            <label style="grid-column: span 2;">
+              <input type="checkbox" id="isActive" checked> Rule is active
+            </label>
+          </div>
+
+          <div class="action-buttons">
+            <button class="btn-primary" onclick="saveRule()">💾 Save Rule</button>
+            <button class="btn-secondary" onclick="cancelEdit()">Cancel</button>
+            <button class="btn-danger" id="deleteBtn" onclick="deleteRule()" style="display: none;">🗑️ Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Automation Logs -->
+      <div style="background: white; padding: 20px; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <h3>Recent Automation Executions</h3>
+        <table class="logs-table">
+          <thead>
+            <tr>
+              <th>Rule</th>
+              <th>Trigger</th>
+              <th>Action</th>
+              <th>Status</th>
+              <th>Details</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody id="logsBody">
+            <tr><td colspan="6" style="text-align: center; color: #999;">Loading logs...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let allRules = [];
+    let currentEditId = null;
+
+    function loadPage() {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (!user || user.role !== 'Admin') {
+        window.location.href = 'dashboard.html';
+        return;
+      }
+      currentUser = user;
+      loadRules();
+      loadLogs();
+    }
+
+    function loadRules() {
+      fetch('http://localhost:3000/api/automation', {
+        headers: {
+          'userid': currentUser.id,
+          'role': currentUser.role
+        }
+      })
+        .then(res => res.json())
+        .then(rules => {
+          allRules = rules || [];
+          displayRules();
+        })
+        .catch(err => console.error('Error loading rules:', err));
+    }
+
+    function displayRules() {
+      const rulesList = document.getElementById('rulesList');
+      
+      if (allRules.length === 0) {
+        rulesList.innerHTML = '<p style="color: #999; text-align: center;">No automation rules yet</p>';
+        return;
+      }
+
+      rulesList.innerHTML = allRules.map(rule => `
+        <div class="rule-card ${currentEditId === rule.id ? 'active' : ''}" onclick="editRule(${rule.id})">
+          <div class="rule-title">${rule.name}</div>
+          <div class="rule-trigger">When: ${rule.trigger}</div>
+          <div class="rule-action">Then: ${rule.action}</div>
+          <span class="rule-status ${rule.isActive ? 'active' : ''}">
+            ${rule.isActive ? '✓ Active' : '○ Inactive'}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    function newRule() {
+      currentEditId = null;
+      document.getElementById('ruleId').value = '';
+      document.getElementById('ruleName').value = '';
+      document.getElementById('ruleDescription').value = '';
+      document.getElementById('isActive').checked = true;
+      document.querySelectorAll('input[name="trigger"]').forEach(r => r.checked = false);
+      document.querySelectorAll('input[name="action"]').forEach(r => r.checked = false);
+      document.getElementById('formTitle').textContent = 'New Automation Rule';
+      document.getElementById('deleteBtn').style.display = 'none';
+      document.getElementById('ruleForm').style.display = 'block';
+      displayRules();
+    }
+
+    function editRule(ruleId) {
+      currentEditId = ruleId;
+      const rule = allRules.find(r => r.id === ruleId);
+      if (!rule) return;
+
+      document.getElementById('ruleId').value = rule.id;
+      document.getElementById('ruleName').value = rule.name;
+      document.getElementById('ruleDescription').value = rule.description || '';
+      document.getElementById('isActive').checked = rule.isActive === 1;
+      document.querySelectorAll('input[name="trigger"]').forEach(r => r.checked = r.value === rule.trigger);
+      document.querySelectorAll('input[name="action"]').forEach(r => r.checked = r.value === rule.action);
+      document.getElementById('formTitle').textContent = 'Edit Automation Rule';
+      document.getElementById('deleteBtn').style.display = 'inline-block';
+      document.getElementById('ruleForm').style.display = 'block';
+      displayRules();
+    }
+
+    function cancelEdit() {
+      currentEditId = null;
+      document.getElementById('ruleForm').style.display = 'none';
+      displayRules();
+    }
+
+    function saveRule() {
+      const id = document.getElementById('ruleId').value;
+      const name = document.getElementById('ruleName').value;
+      const description = document.getElementById('ruleDescription').value;
+      const trigger = document.querySelector('input[name="trigger"]:checked')?.value;
+      const action = document.querySelector('input[name="action"]:checked')?.value;
+      const isActive = document.getElementById('isActive').checked ? 1 : 0;
+
+      if (!name || !trigger || !action) {
+        showMessage('Please fill in all required fields', 'error');
+        return;
+      }
+
+      const data = { name, description, trigger, action, actionParams: {}, isActive };
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? `http://localhost:3000/api/automation/${id}` : 'http://localhost:3000/api/automation';
+
+      fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'userid': currentUser.id,
+          'role': currentUser.role
+        },
+        body: JSON.stringify(data)
+      })
+        .then(res => res.json())
+        .then(() => {
+          showMessage(id ? '✓ Rule updated' : '✓ Rule created', 'success');
+          cancelEdit();
+          loadRules();
+        })
+        .catch(() => showMessage('Error saving rule', 'error'));
+    }
+
+    function deleteRule() {
+      const id = document.getElementById('ruleId').value;
+      if (!confirm('Are you sure you want to delete this rule?')) return;
+
+      fetch(`http://localhost:3000/api/automation/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'userid': currentUser.id,
+          'role': currentUser.role
+        }
+      })
+        .then(res => res.json())
+        .then(() => {
+          showMessage('✓ Rule deleted', 'success');
+          cancelEdit();
+          loadRules();
+        })
+        .catch(() => showMessage('Error deleting rule', 'error'));
+    }
+
+    function loadLogs() {
+      fetch('http://localhost:3000/api/automation/logs', {
+        headers: {
+          'userid': currentUser.id,
+          'role': currentUser.role
+        }
+      })
+        .then(res => res.json())
+        .then(logs => displayLogs(logs))
+        .catch(err => console.error('Error loading logs:', err));
+    }
+
+    function displayLogs(logs) {
+      const tbody = document.getElementById('logsBody');
+      
+      if (logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #999;">No automation logs yet</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = logs.slice(0, 20).map(log => `
+        <tr>
+          <td>${log.ruleId}</td>
+          <td>${log.trigger}</td>
+          <td>${log.action}</td>
+          <td><span class="status-badge status-${log.status}">${log.status}</span></td>
+          <td>${log.details}</td>
+          <td>${new Date(log.executedAt).toLocaleString()}</td>
+        </tr>
+      `).join('');
+    }
+
+    function updateTriggerParams() {
+      // Placeholder for dynamic trigger parameters
+    }
+
+    function updateActionParams() {
+      // Placeholder for dynamic action parameters
+    }
+
+    function showMessage(msg, type) {
+      const div = document.getElementById('message');
+      div.textContent = msg;
+      div.className = `alert ${type}`;
+      div.style.display = 'block';
+      setTimeout(() => { div.style.display = 'none'; }, 5000);
+    }
+
+    function logout(e) {
+      e.preventDefault();
+      localStorage.removeItem('user');
+      window.location.href = 'index.html';
+    }
+
+    window.onload = loadPage;
+    setInterval(loadLogs, 10000); // Refresh logs every 10 seconds
+  </script>
+</body>
+</html>

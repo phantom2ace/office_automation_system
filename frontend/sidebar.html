@@ -1,0 +1,42 @@
+<!-- Sidebar Navigation -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h2>🏢 OfficeApp</h2>
+  </div>
+  
+  <div class="sidebar-nav">
+    <a href="dashboard.html" id="nav-dashboard">📊 Dashboard</a>
+    <a href="tasks.html" id="nav-tasks">✅ Tasks</a>
+    <a href="messages.html" id="nav-messages">✉️ Messages</a>
+    <a href="documents.html" id="nav-documents">📄 Documents</a>
+    <a href="calendar.html" id="nav-calendar">📅 Calendar</a>
+    <a href="leaves.html" id="nav-leaves">🏖️ Leaves</a>
+    <a href="employees.html" id="nav-employees">👥 Employees</a>
+    <a href="finance.html" id="nav-finance">💰 Finance</a>
+    <a href="inventory.html" id="nav-inventory">📦 Inventory</a>
+    <a href="resources.html" id="nav-resources">⚙️ Resources</a>
+    <a href="performance.html" id="nav-performance">⭐ Performance</a>
+    <a href="analytics.html" id="nav-analytics">📈 Analytics</a>
+  </div>
+
+  <div class="sidebar-footer">
+    <button onclick="logout(event)">🚪 Logout</button>
+  </div>
+</div>
+
+<script>
+  // Set active sidebar item based on current page
+  function setActiveSidebarItem() {
+    const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+    const navId = 'nav-' + currentPage.replace('.html', '');
+    const activeElement = document.getElementById(navId);
+    
+    if (activeElement) {
+      document.querySelectorAll('.sidebar-nav a').forEach(el => el.classList.remove('active'));
+      activeElement.classList.add('active');
+    }
+  }
+
+  // Set active item on page load
+  setActiveSidebarItem();
+</script>

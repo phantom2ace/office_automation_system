@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Help Desk - Office Automation</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .ticket-agent-view {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 20px;
+      min-height: 600px;
+    }
+    
+    .ticket-list {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .ticket-list-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px;
+      font-weight: bold;
+    }
+    
+    .ticket-item {
+      padding: 12px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .ticket-item:hover {
+      background: #f9f9f9;
+    }
+    
+    .ticket-item.active {
+      background: #f0f0f0;
+      border-left: 4px solid #667eea;
+    }
+    
+    .ticket-item-number {
+      font-weight: bold;
+      color: #667eea;
+      font-size: 12px;
+    }
+    
+    .ticket-item-title {
+      margin: 5px 0;
+      font-weight: 500;
+    }
+    
+    .ticket-item-info {
+      font-size: 12px;
+      color: #666;
+      display: flex;
+      gap: 10px;
+      margin-top: 5px;
+    }
+    
+    .ticket-detail-panel {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 20px;
+      display: none;
+    }
+    
+    .ticket-detail-panel.active {
+      display: block;
+    }
+    
+    .detail-header {
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .detail-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0 0 10px 0;
+    }
+    
+    .detail-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .detail-meta-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .detail-section {
+      margin: 20px 0;
+    }
+    
+    .detail-section-title {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .detail-content {
+      background: #f9f9f9;
+      padding: 12px;
+      border-radius: 5px;
+      line-height: 1.6;
+      word-wrap: break-word;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+    }
+    
+    .action-buttons button {
+      flex: 1;
+      min-width: 150px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+    
+    .btn-accept {
+      background: #4CAF50;
+      color: white;
+    }
+    
+    .btn-accept:hover {
+      background: #45a049;
+    }
+    
+    .btn-work {
+      background: #2196F3;
+      color: white;
+    }
+    
+    .btn-work:hover {
+      background: #0b7dda;
+    }
+    
+    .btn-escalate {
+      background: #ff9800;
+      color: white;
+    }
+    
+    .btn-escalate:hover {
+      background: #e68900;
+    }
+    
+    .btn-complete {
+      background: #4CAF50;
+      color: white;
+    }
+    
+    .btn-complete:hover {
+      background: #45a049;
+    }
+    
+    .work-form {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 15px 0;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 5px;
+      color: #333;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-family: inherit;
+      font-size: 14px;
+    }
+    
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .status-open {
+      background: #ffebee;
+      color: #c62828;
+    }
+    
+    .status-accepted {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+    
+    .status-in-progress {
+      background: #fff3e0;
+      color: #e65100;
+    }
+    
+    .status-escalated {
+      background: #f3e5f5;
+      color: #6a1b9a;
+    }
+    
+    .status-completed {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    
+    .priority-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+    
+    .priority-urgent {
+      background: #ffcdd2;
+      color: #d32f2f;
+    }
+    
+    .priority-high {
+      background: #ffe0b2;
+      color: #f57c00;
+    }
+    
+    .priority-medium {
+      background: #fff9c4;
+      color: #f9a825;
+    }
+    
+    .priority-low {
+      background: #c8e6c9;
+      color: #388e3c;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+    
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+    
+    @media (max-width: 1024px) {
+      .ticket-agent-view {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>🏢 OfficeApp</h2>
+    </div>
+    
+    <div class="sidebar-nav">
+      <a href="dashboard.html" id="nav-dashboard">📊 Dashboard</a>
+      <a href="tasks.html" id="nav-tasks">✅ Tasks</a>
+      <a href="helpdesk.html" id="nav-helpdesk" class="active">🆘 Help Desk</a>
+      <a href="messages.html" id="nav-messages">✉️ Messages</a>
+      <a href="documents.html" id="nav-documents">📄 Documents</a>
+      <a href="calendar.html" id="nav-calendar">📅 Calendar</a>
+      <a href="leaves.html" id="nav-leaves">🏖️ Leaves</a>
+      <a href="employees.html" id="nav-employees">👥 Employees</a>
+      <a href="finance.html" id="nav-finance">💰 Finance</a>
+      <a href="inventory.html" id="nav-inventory">📦 Inventory</a>
+      <a href="resources.html" id="nav-resources">⚙️ Resources</a>
+      <a href="performance.html" id="nav-performance">⭐ Performance</a>
+      <a href="analytics.html" id="nav-analytics">📈 Analytics</a>
+      <a href="user-management.html" id="nav-users" style="display: none;">👤 User Management</a>
+    </div>
+
+    <div class="sidebar-footer">
+      <button onclick="logout(event)">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="container">
+      <div id="message" class="alert" style="display: none;"></div>
+
+      <!-- For regular users - Create Ticket -->
+      <div id="userView" style="display: none;">
+        <div class="card">
+          <h3>📝 Create Support Ticket</h3>
+          <div class="form-group">
+            <label>Title</label>
+            <input type="text" id="ticketTitle" placeholder="Brief description of the issue" required>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="ticketDesc" rows="4" placeholder="Detailed description of your issue..."></textarea>
+          </div>
+          <div class="grid">
+            <div>
+              <label>Category</label>
+              <select id="ticketCategory">
+                <option value="Hardware">Hardware Issue</option>
+                <option value="Software">Software Issue</option>
+                <option value="Network">Network Issue</option>
+                <option value="Email">Email/Account</option>
+                <option value="Printer">Printer Issue</option>
+                <option value="VPN">VPN/Remote Access</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label>Priority</label>
+              <select id="ticketPriority">
+                <option value="Low">Low</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="High">High</option>
+                <option value="Urgent">Urgent</option>
+              </select>
+            </div>
+          </div>
+          <button onclick="createTicket()">Submit Ticket</button>
+        </div>
+
+        <div class="card">
+          <h3>🎫 My Support Tickets</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Ticket #</th>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="myTicketsTable">
+              <tr>
+                <td colspan="6" style="text-align: center;">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- For IT Staff - Agent View -->
+      <div id="itStaffView" style="display: none;">
+        <h2>🎫 Help Desk Ticket System</h2>
+        
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="grid">
+            <div>
+              <p>📊 Total: <strong id="totalTickets">0</strong></p>
+            </div>
+            <div>
+              <p>🔴 Open: <strong id="openTickets">0</strong></p>
+            </div>
+            <div>
+              <p>✅ Accepted: <strong id="acceptedTickets">0</strong></p>
+            </div>
+            <div>
+              <p>⏳ In Progress: <strong id="inProgressTickets">0</strong></p>
+            </div>
+            <div>
+              <p>🚀 Escalated: <strong id="escalatedTickets">0</strong></p>
+            </div>
+            <div>
+              <p>✓ Completed: <strong id="completedTickets">0</strong></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ticket Agent Interface -->
+        <div class="ticket-agent-view">
+          <!-- Left: Ticket List -->
+          <div class="ticket-list">
+            <div class="ticket-list-header">📋 Support Tickets</div>
+            <div id="ticketsList" style="max-height: 600px; overflow-y: auto;">
+              <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <p>No tickets available</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Ticket Details & Actions -->
+          <div id="ticketDetailPanel" class="ticket-detail-panel">
+            <div class="detail-header">
+              <h3 class="detail-title" id="detailTitle">Select a ticket</h3>
+              <div class="detail-meta">
+                <div class="detail-meta-item">
+                  <span>Ticket #:</span>
+                  <strong id="detailNumber">-</strong>
+                </div>
+                <div class="detail-meta-item">
+                  <span>Status:</span>
+                  <span id="detailStatus" class="status-badge">-</span>
+                </div>
+                <div class="detail-meta-item">
+                  <span>Priority:</span>
+                  <span id="detailPriority" class="priority-badge">-</span>
+                </div>
+                <div class="detail-meta-item">
+                  <span>Created:</span>
+                  <span id="detailCreated">-</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <div class="detail-section-title">👤 Submitted By</div>
+              <div class="detail-meta">
+                <div class="detail-meta-item">
+                  <span>Name:</span>
+                  <strong id="detailUserName">-</strong>
+                </div>
+                <div class="detail-meta-item">
+                  <span>Email:</span>
+                  <span id="detailUserEmail">-</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <div class="detail-section-title">📝 Issue Description</div>
+              <div class="detail-content" id="detailDescription">-</div>
+            </div>
+
+            <div class="detail-section">
+              <div class="detail-section-title">🏷️ Category</div>
+              <div class="detail-content" id="detailCategory">-</div>
+            </div>
+
+            <div class="detail-section" id="workNotesSection" style="display: none;">
+              <div class="detail-section-title">📌 Work Notes</div>
+              <div class="detail-content" id="detailWorkNotes">-</div>
+            </div>
+
+            <div class="detail-section" id="resolutionSection" style="display: none;">
+              <div class="detail-section-title">✓ Resolution</div>
+              <div class="detail-content" id="detailResolution">-</div>
+            </div>
+
+            <!-- Agent Actions -->
+            <div class="detail-section" id="agentActions" style="display: none;">
+              <div class="detail-section-title">⚙️ Agent Actions</div>
+
+              <!-- Accept Ticket -->
+              <div id="acceptAction" class="work-form">
+                <div class="action-buttons">
+                  <button class="btn-accept" onclick="acceptTicket()">✅ Accept Ticket</button>
+                </div>
+              </div>
+
+              <!-- Work on Ticket -->
+              <div id="workAction" class="work-form" style="display: none;">
+                <div class="form-group">
+                  <label>Work Notes (Add your progress)</label>
+                  <textarea id="workNotesInput" placeholder="Document what you're doing to resolve this..."></textarea>
+                </div>
+                <div class="action-buttons">
+                  <button class="btn-work" onclick="saveWorkNotes()">💾 Save Progress</button>
+                  <button class="btn-complete" onclick="showCompleteForm()">✓ Mark Complete</button>
+                  <button class="btn-escalate" onclick="showEscalateForm()">🚀 Escalate</button>
+                </div>
+              </div>
+
+              <!-- Complete Ticket -->
+              <div id="completeAction" class="work-form" style="display: none;">
+                <div class="form-group">
+                  <label>Solution / Resolution Notes</label>
+                  <textarea id="solutionInput" placeholder="Describe the solution provided..."></textarea>
+                </div>
+                <div class="action-buttons">
+                  <button class="btn-complete" onclick="completeTicket()">✓ Complete Ticket</button>
+                  <button onclick="cancelComplete()">Cancel</button>
+                </div>
+              </div>
+
+              <!-- Escalate Ticket -->
+              <div id="escalateAction" class="work-form" style="display: none;">
+                <div class="form-group">
+                  <label>Escalate To (Agent/Supervisor)</label>
+                  <select id="escalateToSelect">
+                    <option value="">Select Team Member...</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Escalation Reason</label>
+                  <textarea id="escalationReasonInput" placeholder="Why is this being escalated?"></textarea>
+                </div>
+                <div class="action-buttons">
+                  <button class="btn-escalate" onclick="escalateTicket()">🚀 Escalate Now</button>
+                  <button onclick="cancelEscalate()">Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let selectedTicket = null;
+    let itStaffList = [];
+    let allTickets = [];
+
+    function loadPage() {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+      currentUser = user;
+
+      // Check if IT staff
+      const isITStaff = user.department === "IT" && (user.role === "Manager" || user.role === "Admin");
+      
+      if (isITStaff) {
+        document.getElementById("itStaffView").style.display = "block";
+        document.getElementById("userView").style.display = "none";
+        loadITStaffList();
+        loadTicketsForIT();
+        loadITStats();
+        // Refresh every 10 seconds
+        setInterval(loadTicketsForIT, 10000);
+        setInterval(loadITStats, 10000);
+      } else {
+        document.getElementById("itStaffView").style.display = "none";
+        document.getElementById("userView").style.display = "block";
+        loadMyTickets();
+        setInterval(loadMyTickets, 10000);
+      }
+    }
+
+    function loadITStaffList() {
+      fetch("http://localhost:3000/api/helpdesk/staff/list", {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role,
+          "department": currentUser.department
+        }
+      })
+        .then(res => res.json())
+        .then(staff => {
+          itStaffList = staff;
+          const select = document.getElementById("escalateToSelect");
+          select.innerHTML = '<option value="">Select Team Member...</option>';
+          staff.forEach(s => {
+            const option = document.createElement("option");
+            option.value = s.id;
+            option.textContent = s.name + (s.role === "Manager" ? " (Manager)" : "");
+            select.appendChild(option);
+          });
+        })
+        .catch(err => console.error("Error loading staff:", err));
+    }
+
+    function loadITStats() {
+      fetch("http://localhost:3000/api/helpdesk/stats", {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role,
+          "department": currentUser.department
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("totalTickets").textContent = data.totalTickets || 0;
+          document.getElementById("openTickets").textContent = data.openTickets || 0;
+          document.getElementById("inProgressTickets").textContent = data.inProgressTickets || 0;
+          document.getElementById("completedTickets").textContent = data.closedTickets || 0;
+          // Calculate accepted and escalated from full list
+          const accepted = allTickets.filter(t => t.status === "Accepted").length;
+          const escalated = allTickets.filter(t => t.status === "Escalated").length;
+          document.getElementById("acceptedTickets").textContent = accepted;
+          document.getElementById("escalatedTickets").textContent = escalated;
+        })
+        .catch(err => console.error("Error loading stats:", err));
+    }
+
+    function loadTicketsForIT() {
+      fetch("http://localhost:3000/api/helpdesk/tickets", {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role,
+          "department": currentUser.department
+        }
+      })
+        .then(res => res.json())
+        .then(tickets => {
+          allTickets = tickets;
+          const listDiv = document.getElementById("ticketsList");
+          
+          if (!tickets || tickets.length === 0) {
+            listDiv.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✓</div><p>All tickets resolved!</p></div>';
+            return;
+          }
+
+          listDiv.innerHTML = tickets.map(t => `
+            <div class="ticket-item ${selectedTicket && selectedTicket.id === t.id ? 'active' : ''}" onclick="selectTicket(${t.id})">
+              <div class="ticket-item-number">${t.ticketNumber}</div>
+              <div class="ticket-item-title">${t.title}</div>
+              <div class="ticket-item-info">
+                <span class="priority-badge priority-${t.priority.toLowerCase()}">${t.priority}</span>
+                <span class="status-badge status-${t.status.toLowerCase().replace(' ', '-')}">${t.status}</span>
+              </div>
+            </div>
+          `).join("");
+        })
+        .catch(err => {
+          console.error("Error loading tickets:", err);
+          document.getElementById("ticketsList").innerHTML = '<div class="empty-state"><p>Error loading tickets</p></div>';
+        });
+    }
+
+    function selectTicket(ticketId) {
+      const ticket = allTickets.find(t => t.id === ticketId);
+      if (!ticket) return;
+
+      selectedTicket = ticket;
+      displayTicketDetails(ticket);
+      document.getElementById("ticketDetailPanel").classList.add("active");
+      
+      // Highlight in list
+      document.querySelectorAll(".ticket-item").forEach(item => item.classList.remove("active"));
+      event.currentTarget.classList.add("active");
+    }
+
+    function displayTicketDetails(ticket) {
+      document.getElementById("detailTitle").textContent = ticket.title;
+      document.getElementById("detailNumber").textContent = ticket.ticketNumber;
+      document.getElementById("detailUserName").textContent = ticket.userName;
+      document.getElementById("detailUserEmail").textContent = ticket.userEmail;
+      document.getElementById("detailDescription").textContent = ticket.description || "-";
+      document.getElementById("detailCategory").textContent = ticket.category || "-";
+      document.getElementById("detailCreated").textContent = new Date(ticket.createdAt).toLocaleString();
+      
+      // Update status badge
+      const statusEl = document.getElementById("detailStatus");
+      statusEl.className = `status-badge status-${ticket.status.toLowerCase().replace(' ', '-')}`;
+      statusEl.textContent = ticket.status;
+      
+      // Update priority badge
+      const priorityEl = document.getElementById("detailPriority");
+      priorityEl.className = `priority-badge priority-${ticket.priority.toLowerCase()}`;
+      priorityEl.textContent = ticket.priority;
+
+      // Show/hide sections based on status
+      document.getElementById("workNotesSection").style.display = ticket.workNotes ? "block" : "none";
+      if (ticket.workNotes) {
+        document.getElementById("detailWorkNotes").textContent = ticket.workNotes;
+      }
+
+      document.getElementById("resolutionSection").style.display = ticket.resolutionNotes ? "block" : "none";
+      if (ticket.resolutionNotes) {
+        document.getElementById("detailResolution").textContent = ticket.resolutionNotes;
+      }
+
+      // Show agent actions
+      document.getElementById("agentActions").style.display = "block";
+      
+      // Show appropriate action based on status
+      document.getElementById("acceptAction").style.display = ticket.status === "Open" ? "block" : "none";
+      document.getElementById("workAction").style.display = (ticket.status === "Accepted" || ticket.status === "In Progress") ? "block" : "none";
+      document.getElementById("completeAction").style.display = "none";
+      document.getElementById("escalateAction").style.display = "none";
+
+      if (ticket.workNotes) {
+        document.getElementById("workNotesInput").value = ticket.workNotes;
+      }
+    }
+
+    function acceptTicket() {
+      if (!selectedTicket) return;
+      
+      fetch(`http://localhost:3000/api/helpdesk/tickets/${selectedTicket.id}/accept`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "userid": currentUser.id,
+          "role": currentUser.role,
+          "department": currentUser.department
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            showMessage("Error accepting ticket: " + data.error, "error");
+          } else {
+            showMessage("✅ Ticket accepted! Start working on it.", "success");
+            loadTicketsForIT();
+            loadITStats();
+          }
+        })
+        .catch(err => showMessage("Error accepting ticket", "error"));
+    }
+
+    function saveWorkNotes() {
+      const notes = document.getElementById("workNotesInput").value;
+      if (!notes) {
+        showMessage("Please add work notes", "error");
+        return;
+      }
+
+      fetch(`http://localhost:3000/api/helpdesk/tickets/${selectedTicket.id}/work`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "userid": currentUser.id,
+          "role": currentUser.role,
+          "department": currentUser.department
+        },
+        body: JSON.stringify({ workNotes: notes })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            showMessage("Error: " + data.error, "error");
+          } else {
+            showMessage("💾 Work notes saved!", "success");
+            loadTicketsForIT();
+          }
+        })
+        .catch(err => showMessage("Error saving notes", "error"));
+    }
+
+    function showCompleteForm() {
+      document.getElementById("workAction").style.display = "none";
+      document.getElementById("completeAction").style.display = "block";
+      document.getElementById("escalateAction").style.display = "none";
+    }
+
+    function showEscalateForm() {
+      document.getElementById("workAction").style.display = "none";
+      document.getElementById("completeAction").style.display = "none";
+      document.getElementById("escalateAction").style.display = "block";
+    }
+
+    function cancelComplete() {
+      document.getElementById("workAction").style.display = "block";
+      document.getElementById("completeAction").style.display = "none";
+      document.getElementById("escalateAction").style.display = "none";
+    }
+
+    function cancelEscalate() {
+      document.getElementById("workAction").style.display = "block";
+      document.getElementById("completeAction").style.display = "none";
+      document.getElementById("escalateAction").style.display = "none";
+    }
+
+    function completeTicket() {
+      const solution = document.getElementById("solutionInput").value;
+      if (!solution) {
+        showMessage("Please enter the solution", "error");
+        return;
+      }
+
+      fetch(`http://localhost:3000/api/helpdesk/tickets/${selectedTicket.id}/complete`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "userid": currentUser.id,
+          "role": currentUser.role,
+          "department": currentUser.department
+        },
+        body: JSON.stringify({ resolutionNotes: solution, solution: solution })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            showMessage("Error: " + data.error, "error");
+          } else {
+            showMessage("✓ Ticket completed successfully!", "success");
+            document.getElementById("solutionInput").value = "";
+            loadTicketsForIT();
+            loadITStats();
+            selectedTicket = null;
+            document.getElementById("ticketDetailPanel").classList.remove("active");
+          }
+        })
+        .catch(err => showMessage("Error completing ticket", "error"));
+    }
+
+    function escalateTicket() {
+      const escalateTo = document.getElementById("escalateToSelect").value;
+      const reason = document.getElementById("escalationReasonInput").value;
+
+      if (!escalateTo) {
+        showMessage("Please select who to escalate to", "error");
+        return;
+      }
+
+      if (!reason) {
+        showMessage("Please enter escalation reason", "error");
+        return;
+      }
+
+      fetch(`http://localhost:3000/api/helpdesk/tickets/${selectedTicket.id}/escalate`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "userid": currentUser.id,
+          "role": currentUser.role,
+          "department": currentUser.department
+        },
+        body: JSON.stringify({ escalateTo: parseInt(escalateTo), escalationReason: reason })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            showMessage("Error: " + data.error, "error");
+          } else {
+            showMessage("🚀 Ticket escalated successfully!", "success");
+            document.getElementById("escalationReasonInput").value = "";
+            document.getElementById("escalateToSelect").value = "";
+            loadTicketsForIT();
+            loadITStats();
+            selectedTicket = null;
+            document.getElementById("ticketDetailPanel").classList.remove("active");
+          }
+        })
+        .catch(err => showMessage("Error escalating ticket", "error"));
+    }
+
+    function loadMyTickets() {
+      fetch(`http://localhost:3000/api/helpdesk/tickets/${currentUser.id}`, {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role
+        }
+      })
+        .then(res => res.json())
+        .then(tickets => {
+          const tbody = document.getElementById("myTicketsTable");
+          if (!tickets || tickets.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No tickets submitted yet</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = tickets.map(t => `
+            <tr>
+              <td><strong>${t.ticketNumber}</strong></td>
+              <td>${t.title}</td>
+              <td>${t.category || '-'}</td>
+              <td><span class="badge ${t.status.toLowerCase().replace(' ', '-')}">${t.status}</span></td>
+              <td>${new Date(t.createdAt).toLocaleDateString()}</td>
+              <td><a href="#" onclick="alert('Ticket Status: ' + '${t.status}'); return false;" style="color: #667eea; text-decoration: none;">View</a></td>
+            </tr>
+          `).join("");
+        })
+        .catch(err => console.error(err));
+    }
+
+    function createTicket() {
+      const title = document.getElementById("ticketTitle").value;
+      const desc = document.getElementById("ticketDesc").value;
+      const category = document.getElementById("ticketCategory").value;
+      const priority = document.getElementById("ticketPriority").value;
+
+      if (!title) {
+        showMessage("Please fill in title", "error");
+        return;
+      }
+
+      fetch("http://localhost:3000/api/helpdesk/tickets/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "userid": currentUser.id,
+          "role": currentUser.role
+        },
+        body: JSON.stringify({ title, description: desc, category, priority })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            showMessage(data.error, "error");
+          } else {
+            showMessage(`✓ Ticket ${data.ticketNumber} created! IT team will respond soon.`, "success");
+            document.getElementById("ticketTitle").value = "";
+            document.getElementById("ticketDesc").value = "";
+            loadMyTickets();
+          }
+        })
+        .catch(() => showMessage("Error creating ticket", "error"));
+    }
+
+    function showMessage(msg, type) {
+      const div = document.getElementById("message");
+      div.textContent = msg;
+      div.className = `alert ${type}`;
+      div.style.display = "block";
+      setTimeout(() => { div.style.display = "none"; }, 4000);
+    }
+
+    function logout(e) {
+      e.preventDefault();
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+    }
+
+    window.onload = loadPage;
+  </script>
+</body>
+</html>

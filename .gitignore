@@ -1,0 +1,6 @@
+backend/node_modules/
+backend/package-lock.json
+backend/.env
+backend/office.db
+backend/database.sqlite
+backend/office-automation-30c8b-firebase-adminsdk-fbsvc-6a496115de.json

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resources - Office Automation</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>🏢 OfficeApp</h2>
+    </div>
+    
+    <div class="sidebar-nav">
+      <a href="dashboard.html" id="nav-dashboard">📊 Dashboard</a>
+      <a href="tasks.html" id="nav-tasks">✅ Tasks</a>
+      <a href="messages.html" id="nav-messages">✉️ Messages</a>
+      <a href="documents.html" id="nav-documents">📄 Documents</a>
+      <a href="calendar.html" id="nav-calendar">📅 Calendar</a>
+      <a href="leaves.html" id="nav-leaves">🏖️ Leaves</a>
+      <a href="employees.html" id="nav-employees">👥 Employees</a>
+      <a href="finance.html" id="nav-finance">💰 Finance</a>
+      <a href="inventory.html" id="nav-inventory">📦 Inventory</a>
+      <a href="resources.html" id="nav-resources" class="active">⚙️ Resources</a>
+      <a href="performance.html" id="nav-performance">⭐ Performance</a>
+      <a href="analytics.html" id="nav-analytics">📈 Analytics</a>
+      <a href="user-management.html" id="nav-users" style="display: none;">👤 User Management</a>
+    </div>
+
+    <div class="sidebar-footer">
+      <button onclick="logout(event)">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="container">
+      <div id="message" class="alert" style="display: none;"></div>
+
+      <div class="card">
+        <h3>📊 Resource Statistics</h3>
+        <div class="grid">
+          <div style="text-align: center;">
+            <h4 id="totalRes">0</h4>
+            <p>Total Resources</p>
+          </div>
+          <div style="text-align: center;">
+            <h4 id="assignedRes">0</h4>
+            <p>Assigned</p>
+          </div>
+          <div style="text-align: center;">
+            <h4 id="totalCost">₹0</h4>
+            <p>Total Cost</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>➕ Add Resource</h3>
+        <div class="grid">
+          <div>
+            <label>Resource Name</label>
+            <input type="text" id="resName" placeholder="Resource name">
+          </div>
+          <div>
+            <label>Type</label>
+            <input type="text" id="resType" placeholder="e.g., Laptop, Desk, Software">
+          </div>
+        </div>
+        <div class="grid">
+          <div>
+            <label>Cost</label>
+            <input type="number" id="resCost" step="0.01" placeholder="Cost">
+          </div>
+          <div>
+            <label>Location</label>
+            <input type="text" id="resLocation" placeholder="Location">
+          </div>
+        </div>
+        <button onclick="addResource()">Add Resource</button>
+      </div>
+
+      <div class="card">
+        <h3>📋 Resource List</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Assigned To</th>
+              <th>Cost</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="resourceTable">
+            <tr>
+              <td colspan="6" style="text-align: center;">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+
+    function loadPage() {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user || user.role !== "Manager") {
+        window.location.href = "dashboard.html";
+        return;
+      }
+      currentUser = user;
+      loadResources();
+      loadStats();
+    }
+
+    function loadResources() {
+      fetch(`http://localhost:3000/api/resources/`, {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role
+        }
+      })
+        .then(res => res.json())
+        .then(resources => {
+          const tbody = document.getElementById("resourceTable");
+          if (!resources || resources.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6">No resources found</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = resources.map(r => `
+            <tr>
+              <td>${r.name}</td>
+              <td>${r.type}</td>
+              <td><span class="badge ${r.status.toLowerCase()}">${r.status}</span></td>
+              <td>${r.assignedToName || '-'}</td>
+              <td>₹${r.cost || 0}</td>
+              <td><button onclick="assignResource(${r.id})" style="width: 100%; padding: 5px;">Manage</button></td>
+            </tr>
+          `).join("");
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById("resourceTable").innerHTML = '<tr><td colspan="6" style="color: red;">Error loading resources</td></tr>';
+        });
+    }
+
+    function loadStats() {
+      fetch(`http://localhost:3000/api/resources/analytics/summary`, {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role
+        }
+      })
+        .then(res => res.json())
+        .then(stats => {
+          document.getElementById("totalRes").textContent = stats.totalResources || 0;
+          document.getElementById("assignedRes").textContent = stats.assignedResources || 0;
+          document.getElementById("totalCost").textContent = '₹' + (stats.totalCost || 0);
+        })
+        .catch(err => console.error(err));
+    }
+
+    function addResource() {
+      const name = document.getElementById("resName").value;
+      const type = document.getElementById("resType").value;
+      const cost = document.getElementById("resCost").value;
+      const location = document.getElementById("resLocation").value;
+
+      if (!name || !type) {
+        showMessage("Please fill in required fields", "error");
+        return;
+      }
+
+      fetch("http://localhost:3000/api/resources/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "userid": currentUser.id,
+          "role": currentUser.role
+        },
+        body: JSON.stringify({ name, type, cost: parseFloat(cost) || 0, location })
+      })
+        .then(res => res.json())
+        .then(() => {
+          showMessage("Resource added!", "success");
+          document.getElementById("resName").value = "";
+          document.getElementById("resType").value = "";
+          document.getElementById("resCost").value = "";
+          document.getElementById("resLocation").value = "";
+          loadResources();
+          loadStats();
+        })
+        .catch(() => showMessage("Error adding resource", "error"));
+    }
+
+    function assignResource(resourceId) {
+      const empId = prompt("Enter Employee ID to assign to:");
+      if (!empId) return;
+
+      fetch(`http://localhost:3000/api/resources/assign/${resourceId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "userid": currentUser.id,
+          "role": currentUser.role
+        },
+        body: JSON.stringify({ assignedTo: parseInt(empId) })
+      })
+        .then(res => res.json())
+        .then(() => {
+          showMessage("Resource assigned!", "success");
+          loadResources();
+          loadStats();
+        })
+        .catch(() => showMessage("Error assigning resource", "error"));
+    }
+
+    function showMessage(msg, type) {
+      const div = document.getElementById("message");
+      div.textContent = msg;
+      div.className = `alert ${type}`;
+      div.style.display = "block";
+    }
+
+    function logout(e) {
+      e.preventDefault();
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+    }
+
+    window.onload = loadPage;
+  </script>
+</body>
+</html>
