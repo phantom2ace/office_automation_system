@@ -283,7 +283,7 @@
               <td>${e.phone || '-'}</td>
               <td><span class="badge ${e.status === 'Active' ? 'success' : 'danger'}">${e.status}</span></td>
               <td>
-                <button class="btn-sm" onclick="alert('Edit functionality coming soon')">✏️</button>
+                <button class="btn-sm" onclick="showEditEmployeeModal(${e.id}, '${e.name}', '${e.email}', '${e.role}', '${e.department}', '${e.phone}', '${e.reportingManager}')">✏️</button>
               </td>
             </tr>
           `).join("");
@@ -292,6 +292,60 @@
           document.getElementById("totalEmp").textContent = employees.length;
         })
         .catch(err => console.error("Error loading employees:", err));
+    }
+
+    function showEditEmployeeModal(empId, name, email, role, dept, phone, managerId) {
+        document.getElementById('editEmpId').value = empId;
+        document.getElementById('editName').value = name;
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editRole').value = role;
+        document.getElementById('editDept').value = dept;
+        // Handle null/undefined values passed as strings
+        document.getElementById('editPhone').value = (phone && phone !== 'null' && phone !== 'undefined') ? phone : '';
+        document.getElementById('editManagerId').value = (managerId && managerId !== 'null' && managerId !== 'undefined') ? managerId : '';
+        document.getElementById("editEmpModal").style.display = "block";
+    }
+
+    function closeEditModal() {
+        document.getElementById("editEmpModal").style.display = "none";
+    }
+
+    function updateEmployee(e) {
+        e.preventDefault();
+        const empId = document.getElementById('editEmpId').value;
+        const employeeData = {
+            name: document.getElementById("editName").value,
+            email: document.getElementById("editEmail").value,
+            role: document.getElementById("editRole").value,
+            department: document.getElementById("editDept").value,
+            phone: document.getElementById("editPhone").value,
+            reportingManager: document.getElementById("editManagerId").value || null
+        };
+
+        fetch(`/api/employees/${empId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "userid": currentUser.id,
+                "role": currentUser.role,
+                "department": currentUser.department
+            },
+            body: JSON.stringify(employeeData)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert("Error: " + data.error);
+            } else {
+                alert("Employee updated successfully!");
+                closeEditModal();
+                loadEmployees();
+            }
+        })
+        .catch(err => {
+            console.error("Error updating employee:", err);
+            alert("Failed to update employee");
+        });
     }
 
     function loadStats() {

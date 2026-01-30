@@ -22,7 +22,7 @@ router.get("/auth/check", (req, res) => {
   const role = req.headers.role;
   const department = req.headers.department;
   
-  const authorized = role === 'Admin' || department === 'HR';
+  const authorized = (role && role.toLowerCase() === 'admin') || (department && department.toLowerCase() === 'hr');
   res.json({ authorized });
 });
 
@@ -55,7 +55,7 @@ router.post("/", authorizeEmployeeAccess, async (req, res) => {
 // Get all employees
 router.get("/", authorizeEmployeeAccess, (req, res) => {
   db.all(
-    "SELECT id, name, email, department, role, phone, status, availability FROM users WHERE id != 1",
+    "SELECT id, name, email, department, role, phone, reportingManager, status, availability FROM users WHERE id != 1",
     (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json(rows || []);
