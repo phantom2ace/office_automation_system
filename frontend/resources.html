@@ -119,7 +119,7 @@
     }
 
     function loadResources() {
-      fetch(`http://localhost:3000/api/resources/`, {
+      fetch(`/api/resources/`, {
         headers: {
           "userid": currentUser.id,
           "role": currentUser.role
@@ -151,7 +151,7 @@
     }
 
     function loadStats() {
-      fetch(`http://localhost:3000/api/resources/analytics/summary`, {
+      fetch(`/api/resources/analytics/summary`, {
         headers: {
           "userid": currentUser.id,
           "role": currentUser.role
@@ -203,7 +203,7 @@
       const empId = prompt("Enter Employee ID to assign to:");
       if (!empId) return;
 
-      fetch(`http://localhost:3000/api/resources/assign/${resourceId}`, {
+      fetch(`/api/resources/assign/${resourceId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

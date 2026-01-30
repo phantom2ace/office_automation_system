@@ -517,7 +517,7 @@
     }
 
     function loadSummary(userId) {
-      fetch(`http://localhost:3000/api/payroll/summary/${userId}`, {
+      fetch(`/api/payroll/summary/${userId}`, {
         headers: {
           'userid': currentUser.id,
           'role': currentUser.role
@@ -534,7 +534,7 @@
     }
 
     function checkIn() {
-      fetch('http://localhost:3000/api/payroll/attendance/checkin', {
+      fetch('/api/payroll/attendance/checkin', {
         method: 'POST',
         headers: {
           'userid': currentUser.id,

@@ -132,7 +132,7 @@
     }
 
     function loadReviews() {
-      fetch(`http://localhost:3000/api/performance/all`, {
+      fetch(`/api/performance/all`, {
         headers: {
           "userid": currentUser.id,
           "role": currentUser.role
@@ -199,7 +199,7 @@
         return;
       }
 
-      fetch("http://localhost:3000/api/performance/create", {
+      fetch("/api/performance/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

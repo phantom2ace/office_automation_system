@@ -619,7 +619,7 @@
     }
 
     function loadTicketsForIT() {
-      fetch("http://localhost:3000/api/helpdesk/tickets", {
+      fetch("/api/helpdesk/tickets", {
         headers: {
           "userid": currentUser.id,
           "role": currentUser.role,
@@ -742,7 +742,7 @@
         return;
       }
 
-      fetch(`http://localhost:3000/api/helpdesk/tickets/${selectedTicket.id}/work`, {
+      fetch(`/api/helpdesk/tickets/${selectedTicket.id}/work`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -835,7 +835,7 @@
         return;
       }
 
-      fetch(`http://localhost:3000/api/helpdesk/tickets/${selectedTicket.id}/escalate`, {
+      fetch(`/api/helpdesk/tickets/${selectedTicket.id}/escalate`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
