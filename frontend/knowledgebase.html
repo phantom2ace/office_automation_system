@@ -197,7 +197,7 @@
         loadCategories();
 
         function loadArticles(category = '', search = '') {
-            let url = 'http://localhost:3000/api/knowledge-base';
+            let url = '/api/knowledge-base';
             const params = new URLSearchParams();
             if (category) params.append('category', category);
             if (search) params.append('search', search);
@@ -234,7 +234,7 @@
         }
 
         function loadCategories() {
-            fetch('http://localhost:3000/api/knowledge-base/meta/categories')
+            fetch('/api/knowledge-base/meta/categories')
                 .then(res => res.json())
                 .then(categories => {
                     const container = document.getElementById('categoryList');
@@ -266,7 +266,7 @@
         }
 
         function viewArticle(id) {
-            fetch(`http://localhost:3000/api/knowledge-base/${id}`)
+            fetch(`/api/knowledge-base/${id}`)
                 .then(res => res.json())
                 .then(article => {
                     document.getElementById('modalTitle').innerText = article.title;
@@ -296,7 +296,7 @@
                 authorId: currentUser.id
             };
 
-            fetch('http://localhost:3000/api/knowledge-base', {
+            fetch('/api/knowledge-base', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)

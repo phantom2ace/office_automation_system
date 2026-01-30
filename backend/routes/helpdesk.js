@@ -6,7 +6,7 @@ const auth = require("../middleware/auth");
 // Create help desk ticket
 router.post("/tickets/create", auth("Staff"), (req, res) => {
   const { title, description, category, priority = "Medium" } = req.body;
-  const userId = req.headers.userid;
+  const userId = req.user.id;
 
   if (!title) {
     return res.json({ error: "Title is required" });
@@ -35,8 +35,8 @@ router.post("/tickets/create", auth("Staff"), (req, res) => {
 // Accept ticket by agent
 router.put("/tickets/:ticketId/accept", auth("Staff"), (req, res) => {
   const { ticketId } = req.params;
-  const agentId = req.headers.userid;
-  const userDept = req.headers.department;
+  const agentId = req.user.id;
+  const userDept = req.user.department;
 
   if (userDept !== "IT") {
     return res.json({ error: "Only IT staff can accept tickets" });
@@ -60,8 +60,8 @@ router.put("/tickets/:ticketId/accept", auth("Staff"), (req, res) => {
 router.put("/tickets/:ticketId/work", auth("Staff"), (req, res) => {
   const { ticketId } = req.params;
   const { workNotes } = req.body;
-  const agentId = req.headers.userid;
-  const userDept = req.headers.department;
+  const agentId = req.user.id;
+  const userDept = req.user.department;
 
   if (userDept !== "IT") {
     return res.json({ error: "Only IT staff can work on tickets" });
@@ -88,8 +88,8 @@ router.put("/tickets/:ticketId/work", auth("Staff"), (req, res) => {
 router.put("/tickets/:ticketId/escalate", auth("Staff"), (req, res) => {
   const { ticketId } = req.params;
   const { escalateTo, escalationReason } = req.body;
-  const agentId = req.headers.userid;
-  const userDept = req.headers.department;
+  const agentId = req.user.id;
+  const userDept = req.user.department;
 
   if (userDept !== "IT") {
     return res.json({ error: "Only IT staff can escalate tickets" });
@@ -157,7 +157,7 @@ router.get("/tickets/:userId", auth("Staff"), (req, res) => {
 
 // Get all tickets (for IT staff to manage)
 router.get("/tickets", auth("Manager"), (req, res) => {
-  const userDept = req.headers.department;
+  const userDept = req.user.department;
   
   // Only IT staff can see all tickets
   if (userDept !== "IT") {
@@ -240,7 +240,7 @@ router.get("/staff/list", auth("Staff"), (req, res) => {
 router.put("/tickets/:ticketId/assign", auth("Manager"), (req, res) => {
   const { ticketId } = req.params;
   const { assignedTo } = req.body;
-  const userDept = req.headers.department;
+  const userDept = req.user.department;
 
   if (userDept !== "IT") {
     return res.json({ error: "Only IT staff can assign tickets" });
@@ -289,7 +289,7 @@ router.put("/tickets/:ticketId/resolve", auth("Staff"), (req, res) => {
 
 // Get help desk statistics (for IT dashboard)
 router.get("/stats", auth("Manager"), (req, res) => {
-  const userDept = req.headers.department;
+  const userDept = req.user.department;
 
   if (userDept !== "IT") {
     return res.json({ error: "Only IT staff can access this" });

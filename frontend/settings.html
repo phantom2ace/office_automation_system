@@ -379,7 +379,7 @@
         }
       });
 
-      fetch('http://localhost:3000/api/settings/config', {
+      fetch('/api/settings/config', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -396,7 +396,7 @@
     function createBackup() {
       if(!confirm('Create a new database backup?')) return;
       
-      fetch('http://localhost:3000/api/settings/backup', {
+      fetch('/api/settings/backup', {
         method: 'POST',
         headers: { 'userid': user.id, 'Authorization': user.token }
       })
@@ -408,7 +408,7 @@
     }
 
     function loadBackups() {
-      fetch('http://localhost:3000/api/settings/backups', {
+      fetch('/api/settings/backups', {
         headers: { 'userid': user.id, 'Authorization': user.token }
       })
       .then(res => res.json())
@@ -434,7 +434,7 @@
     function restoreBackup(filename) {
       if(!confirm('WARNING: This will overwrite the current database. This action cannot be undone. Are you sure?')) return;
       
-      fetch('http://localhost:3000/api/settings/restore', {
+      fetch('/api/settings/restore', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

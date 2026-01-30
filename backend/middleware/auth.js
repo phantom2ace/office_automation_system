@@ -16,7 +16,7 @@ module.exports = function(requiredRole) {
 
     // Verify user exists in database
     db.get(
-      "SELECT id, role FROM users WHERE id = ? AND status = 'Active'",
+      "SELECT id, role, department FROM users WHERE id = ? AND status = 'Active'",
       [userId],
       (err, user) => {
         if (err) {
@@ -38,7 +38,8 @@ module.exports = function(requiredRole) {
         // Attach user information to the request
         req.user = {
           id: user.id,
-          role: user.role
+          role: user.role,
+          department: user.department
         };
         
         next();

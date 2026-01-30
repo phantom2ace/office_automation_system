@@ -165,7 +165,7 @@
     }
 
     function loadEmployeesForReview() {
-      fetch(`http://localhost:3000/api/employees/`, {
+      fetch(`/api/employees/`, {
         headers: {
           "userid": currentUser.id,
           "role": currentUser.role

@@ -1,5 +1,6 @@
 const express = require('express');
 const db = require('../database');
+const auth = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -42,9 +43,9 @@ router.get('/', (req, res) => {
 });
 
 // Create a new workflow rule
-router.post('/', (req, res) => {
+router.post('/', auth('Admin'), (req, res) => {
   const { name, description, trigger, triggerValue, action, actionParams } = req.body;
-  const createdBy = req.headers.userid;
+  const createdBy = req.user.id;
 
   db.run(
     `INSERT INTO workflow_rules (name, description, trigger, triggerValue, action, actionParams, createdBy)
@@ -82,7 +83,7 @@ router.delete('/:id', (req, res) => {
 });
 
 // Get automation logs
-router.get('/logs', (req, res) => {
+router.get('/logs', auth('Admin'), (req, res) => {
   db.all(
     'SELECT * FROM automation_logs ORDER BY executedAt DESC LIMIT 100',
     (err, rows) => {

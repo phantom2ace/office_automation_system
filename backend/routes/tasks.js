@@ -1,17 +1,14 @@
 const express = require("express");
 const db = require("../database");
+const auth = require("../middleware/auth");
 
 const router = express.Router();
 
 // Create task - ADMIN ONLY
-router.post("/create", (req, res) => {
+router.post("/create", auth("Admin"), (req, res) => {
   const { title, description, department, assignedTo } = req.body;
-  const userRole = req.headers.role;
-
-  // Only Admin can create tasks
-  if (userRole !== "Admin") {
-    return res.json({ error: "Only Admin can create tasks" });
-  }
+  
+  // Validation handled by middleware
 
   if (!title || !department) {
     return res.json({ error: "Title and department are required" });
@@ -103,7 +100,12 @@ router.post("/auto-assign", (req, res) => {
 });
 
 // Get tasks for employee
-router.get("/:userId", (req, res) => {
+router.get("/:userId", auth(), (req, res) => {
+  // Verify ownership
+  if (req.user.id != req.params.userId && req.user.role !== 'Admin' && req.user.role !== 'Manager') {
+    return res.status(403).json({ error: "Access denied" });
+  }
+
   db.all(
     "SELECT * FROM tasks WHERE assignedTo = ?",
     [req.params.userId],
@@ -115,9 +117,9 @@ router.get("/:userId", (req, res) => {
 });
 
 // Accept or decline task - with AUTO-REASSIGN on decline
-router.post("/respond", (req, res) => {
+router.post("/respond", auth(), (req, res) => {
   const { taskId, status, reason } = req.body;
-  const userId = req.headers.userid;
+  const userId = req.user.id;
 
   // First, get the task details
   db.get(

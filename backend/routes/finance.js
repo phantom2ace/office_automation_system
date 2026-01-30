@@ -1,10 +1,11 @@
 const express = require("express");
 const db = require("../database");
+const auth = require("../middleware/auth");
 
 const router = express.Router();
 
 // Add transaction
-router.post("/add", (req, res) => {
+router.post("/add", auth("Manager"), (req, res) => {
   const { description, amount, type } = req.body;
 
   db.run(
@@ -19,7 +20,7 @@ router.post("/add", (req, res) => {
 });
 
 // Get summary
-router.get("/summary", (req, res) => {
+router.get("/summary", auth("Manager"), (req, res) => {
   db.all(
     `
     SELECT type, SUM(amount) as total
@@ -34,7 +35,7 @@ router.get("/summary", (req, res) => {
 });
 
 // Get recent transactions
-router.get("/list", (req, res) => {
+router.get("/list", auth("Manager"), (req, res) => {
   db.all(
     `SELECT * FROM finance ORDER BY createdAt DESC LIMIT 20`,
     (err, rows) => {

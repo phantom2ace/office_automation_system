@@ -5,7 +5,7 @@ const auth = require("../middleware/auth");
 const router = express.Router();
 
 // Get all resources
-router.get("/", (req, res) => {
+router.get("/", auth(), (req, res) => {
   db.all(
     `SELECT r.*, u.name as assignedToName 
      FROM resources r
@@ -69,7 +69,12 @@ router.put("/release/:id", auth("Manager"), (req, res) => {
 });
 
 // Get resources assigned to user
-router.get("/user/:userId", (req, res) => {
+router.get("/user/:userId", auth(), (req, res) => {
+  // Allow if requesting own resources or if Manager/Admin
+  if (req.user.id != req.params.userId && req.user.role !== 'Admin' && req.user.role !== 'Manager') {
+    return res.status(403).json({ error: "Access denied" });
+  }
+
   db.all(
     "SELECT * FROM resources WHERE assignedTo = ?",
     [req.params.userId],

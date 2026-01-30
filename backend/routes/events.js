@@ -1,10 +1,12 @@
 const express = require("express");
 const db = require("../database");
+const auth = require("../middleware/auth");
 
 const router = express.Router();
 
-router.post("/add", (req, res) => {
-  const { title, userId, eventDate, reminder } = req.body;
+router.post("/add", auth(), (req, res) => {
+  const { title, eventDate, reminder } = req.body;
+  const userId = req.user.id;
 
   db.run(
     `INSERT INTO events (title, userId, eventDate, reminder)
@@ -17,7 +19,12 @@ router.post("/add", (req, res) => {
   );
 });
 
-router.get("/:userId", (req, res) => {
+router.get("/:userId", auth(), (req, res) => {
+  // Users can only view their own events
+  if (req.user.id != req.params.userId && req.user.role !== 'Admin') {
+    return res.status(403).json({ error: "Access denied" });
+  }
+
   db.all(
     `SELECT * FROM events WHERE userId = ?`,
     [req.params.userId],

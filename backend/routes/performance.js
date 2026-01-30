@@ -34,7 +34,7 @@ router.get("/all", auth("Manager"), (req, res) => {
 // Create performance review
 router.post("/create", auth("Manager"), (req, res) => {
   const { userId, period, tasksCompleted, tasksOverdue, efficiency, attendance, rating, comments } = req.body;
-  const reviewedBy = req.headers.userid;
+  const reviewedBy = req.user.id;
 
   db.run(
     `INSERT INTO performance (userId, period, tasksCompleted, tasksOverdue, efficiency, attendance, rating, comments, reviewedBy, reviewDate, createdAt)

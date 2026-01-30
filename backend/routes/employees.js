@@ -6,21 +6,24 @@ const bcrypt = require("bcryptjs");
 const router = express.Router();
 
 // Middleware to check if user is authorized to view employees (Admin or HR only)
-const authorizeEmployeeAccess = (req, res, next) => {
-  const role = req.headers.role;
-  const userDept = req.headers.department;
-  
-  if ((role && role.toLowerCase() === 'admin') || (userDept && userDept.toLowerCase() === 'hr')) {
-    next();
-  } else {
-    res.status(403).json({ error: 'Access denied. Only Admin and HR staff can view employees.' });
+const authorizeEmployeeAccess = [
+  auth(),
+  (req, res, next) => {
+    const role = req.user.role;
+    const userDept = req.user.department;
+    
+    if ((role && role.toLowerCase() === 'admin') || (userDept && userDept.toLowerCase() === 'hr')) {
+      next();
+    } else {
+      res.status(403).json({ error: 'Access denied. Only Admin and HR staff can view employees.' });
+    }
   }
-};
+];
 
 // Check if user is authorized to view employees
-router.get("/auth/check", (req, res) => {
-  const role = req.headers.role;
-  const department = req.headers.department;
+router.get("/auth/check", auth(), (req, res) => {
+  const role = req.user.role;
+  const department = req.user.department;
   
   const authorized = (role && role.toLowerCase() === 'admin') || (department && department.toLowerCase() === 'hr');
   res.json({ authorized });
@@ -172,7 +175,7 @@ router.put("/:id/availability", auth("Staff"), (req, res) => {
 });
 
 // Get employee workload (task count)
-router.get("/:id/workload", (req, res) => {
+router.get("/:id/workload", auth(), (req, res) => {
   db.get(
     `SELECT u.id, u.name, u.availability, COUNT(t.id) as pendingTasks
      FROM users u

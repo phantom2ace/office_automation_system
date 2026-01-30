@@ -398,7 +398,7 @@
     }
 
     function loadEmployeesList() {
-      fetch('http://localhost:3000/api/employees/', {
+      fetch('/api/employees/', {
         headers: {
           'userid': currentUser.id,
           'role': currentUser.role,
@@ -415,7 +415,7 @@
     }
 
     function loadConfigSection(userId) {
-      fetch(`http://localhost:3000/api/payroll/config/${userId}`, {
+      fetch(`/api/payroll/config/${userId}`, {
         headers: {
           'userid': currentUser.id,
           'role': currentUser.role
@@ -445,7 +445,7 @@
         bankAccount: document.getElementById('bankAccount').value
       };
 
-      fetch(`http://localhost:3000/api/payroll/config/${currentUser.id}`, {
+      fetch(`/api/payroll/config/${currentUser.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -470,7 +470,7 @@
         return;
       }
 
-      fetch('http://localhost:3000/api/payroll/calculate', {
+      fetch('/api/payroll/calculate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -488,7 +488,7 @@
     }
 
     function loadPayrollRecords(userId) {
-      fetch(`http://localhost:3000/api/payroll/records/${userId}`, {
+      fetch(`/api/payroll/records/${userId}`, {
         headers: {
           'userid': currentUser.id,
           'role': currentUser.role
@@ -554,7 +554,7 @@
     }
 
     function checkOut() {
-      fetch('http://localhost:3000/api/payroll/attendance/checkout', {
+      fetch('/api/payroll/attendance/checkout', {
         method: 'POST',
         headers: {
           'userid': currentUser.id,

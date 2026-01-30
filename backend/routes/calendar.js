@@ -5,7 +5,12 @@ const auth = require("../middleware/auth");
 const router = express.Router();
 
 // Get calendar events
-router.get("/:userId", (req, res) => {
+router.get("/:userId", auth(), (req, res) => {
+  // Users can only view their own events unless they are Admin/Manager
+  if (req.user.id != req.params.userId && req.user.role !== 'Admin' && req.user.role !== 'Manager') {
+    return res.status(403).json({ error: "Access denied" });
+  }
+  
   db.all(
     `SELECT * FROM events WHERE userId = ? ORDER BY eventDate, startTime`,
     [req.params.userId],
@@ -17,9 +22,9 @@ router.get("/:userId", (req, res) => {
 });
 
 // Create event
-router.post("/create", (req, res) => {
+router.post("/create", auth(), (req, res) => {
   const { title, description, eventDate, startTime, endTime, eventType, location, attendees, reminder } = req.body;
-  const userId = req.headers.userid;
+  const userId = req.user.id;
 
   db.run(
     `INSERT INTO events (title, description, userId, eventDate, startTime, endTime, eventType, location, attendees, reminder, createdAt)
@@ -33,25 +38,43 @@ router.post("/create", (req, res) => {
 });
 
 // Update event
-router.put("/update/:id", (req, res) => {
+router.put("/update/:id", auth(), (req, res) => {
   const { title, description, eventDate, startTime, endTime, location, reminder } = req.body;
-
-  db.run(
-    `UPDATE events SET title = ?, description = ?, eventDate = ?, startTime = ?, endTime = ?, location = ?, reminder = ?
-     WHERE id = ?`,
-    [title, description, eventDate, startTime, endTime, location, reminder, req.params.id],
-    (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ message: "Event updated" });
+  
+  // Verify ownership
+  db.get("SELECT userId FROM events WHERE id = ?", [req.params.id], (err, event) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!event) return res.status(404).json({ error: "Event not found" });
+    if (event.userId !== req.user.id && req.user.role !== 'Admin') {
+      return res.status(403).json({ error: "Access denied" });
     }
-  );
+
+    db.run(
+      `UPDATE events SET title = ?, description = ?, eventDate = ?, startTime = ?, endTime = ?, location = ?, reminder = ?
+       WHERE id = ?`,
+      [title, description, eventDate, startTime, endTime, location, reminder, req.params.id],
+      (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: "Event updated" });
+      }
+    );
+  });
 });
 
 // Delete event
-router.delete("/:id", (req, res) => {
-  db.run("DELETE FROM events WHERE id = ?", [req.params.id], (err) => {
+router.delete("/:id", auth(), (req, res) => {
+  // Verify ownership
+  db.get("SELECT userId FROM events WHERE id = ?", [req.params.id], (err, event) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.json({ message: "Event deleted" });
+    if (!event) return res.status(404).json({ error: "Event not found" });
+    if (event.userId !== req.user.id && req.user.role !== 'Admin') {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    db.run("DELETE FROM events WHERE id = ?", [req.params.id], (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ message: "Event deleted" });
+    });
   });
 });
 

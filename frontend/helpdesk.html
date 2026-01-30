@@ -573,7 +573,7 @@
     }
 
     function loadITStaffList() {
-      fetch("http://localhost:3000/api/helpdesk/staff/list", {
+      fetch("/api/helpdesk/staff/list", {
         headers: {
           "userid": currentUser.id,
           "role": currentUser.role,
@@ -596,7 +596,7 @@
     }
 
     function loadITStats() {
-      fetch("http://localhost:3000/api/helpdesk/stats", {
+      fetch("/api/helpdesk/stats", {
         headers: {
           "userid": currentUser.id,
           "role": currentUser.role,
@@ -713,7 +713,7 @@
     function acceptTicket() {
       if (!selectedTicket) return;
       
-      fetch(`http://localhost:3000/api/helpdesk/tickets/${selectedTicket.id}/accept`, {
+      fetch(`/api/helpdesk/tickets/${selectedTicket.id}/accept`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -795,7 +795,7 @@
         return;
       }
 
-      fetch(`http://localhost:3000/api/helpdesk/tickets/${selectedTicket.id}/complete`, {
+      fetch(`/api/helpdesk/tickets/${selectedTicket.id}/complete`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -863,7 +863,7 @@
     }
 
     function loadMyTickets() {
-      fetch(`http://localhost:3000/api/helpdesk/tickets/${currentUser.id}`, {
+      fetch(`/api/helpdesk/tickets/${currentUser.id}`, {
         headers: {
           "userid": currentUser.id,
           "role": currentUser.role
@@ -902,7 +902,7 @@
         return;
       }
 
-      fetch("http://localhost:3000/api/helpdesk/tickets/create", {
+      fetch("/api/helpdesk/tickets/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

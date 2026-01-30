@@ -1,14 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../database");
+const auth = require("../middleware/auth");
 
 // Get all users (Simplified for Chat/Staff view)
-router.get("/", (req, res) => {
-  const userId = req.headers.userid;
-  if (!userId) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
+router.get("/", auth(), (req, res) => {
+  // req.user is populated by auth middleware
   db.all(
     `SELECT id, name, email, department, role, status FROM users WHERE status = 'Active' ORDER BY name`,
     (err, users) => {
@@ -21,18 +18,9 @@ router.get("/", (req, res) => {
 });
 
 // Create new user (Admin only)
-router.post("/create", (req, res) => {
+router.post("/create", auth("Admin"), (req, res) => {
   const { name, email, password, department, role } = req.body;
-  const userRole = req.headers.userrole;
-  const userId = req.headers.userid;
-
-  // Admin check
-  if (!userRole || userRole.toLowerCase() !== "admin") {
-    return res.status(403).json({
-      success: false,
-      message: "Only admin can create users",
-    });
-  }
+  // Admin check handled by middleware
 
   // Validate required fields
   if (!name || !email || !password || !department || !role) {
@@ -94,15 +82,8 @@ router.post("/create", (req, res) => {
 });
 
 // Get all users (Admin only)
-router.get("/all", (req, res) => {
-  const userRole = req.headers.userrole;
-
-  if (!userRole || userRole.toLowerCase() !== "admin") {
-    return res.status(403).json({
-      success: false,
-      message: "Only admin can view all users",
-    });
-  }
+router.get("/all", auth("Admin"), (req, res) => {
+  // Admin check handled by middleware
 
   db.all(
     `SELECT id, name, email, department, role, status, availability, createdAt FROM users ORDER BY id`,
@@ -121,18 +102,11 @@ router.get("/all", (req, res) => {
 });
 
 // Update user (Admin only)
-router.put("/:userId", (req, res) => {
+router.put("/:userId", auth("Admin"), (req, res) => {
   const { userId } = req.params;
   const { name, email, password, department, role, status, availability } =
     req.body;
-  const adminRole = req.headers.userrole;
-
-  if (!adminRole || adminRole.toLowerCase() !== "admin") {
-    return res.status(403).json({
-      success: false,
-      message: "Only admin can update users",
-    });
-  }
+  // Admin check handled by middleware
 
   // Build dynamic update query
   const updates = [];
@@ -198,16 +172,9 @@ router.put("/:userId", (req, res) => {
 });
 
 // Delete user (Admin only)
-router.delete("/:userId", (req, res) => {
+router.delete("/:userId", auth("Admin"), (req, res) => {
   const { userId } = req.params;
-  const userRole = req.headers.userrole;
-
-  if (!userRole || userRole.toLowerCase() !== "admin") {
-    return res.status(403).json({
-      success: false,
-      message: "Only admin can delete users",
-    });
-  }
+  // Admin check handled by middleware
 
   // Prevent deleting the only admin
   db.get(

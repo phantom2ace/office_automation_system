@@ -199,7 +199,7 @@ function handleLeadSubmit(e) {
     source: document.getElementById('leadSource').value
   };
   
-  fetch('http://localhost:3000/api/sales/leads', {
+  fetch('/api/sales/leads', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'userid': user.id },
     body: JSON.stringify(data)

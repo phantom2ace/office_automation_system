@@ -69,7 +69,7 @@
 
     function loadAnalytics() {
       // Task Statistics
-      fetch("http://localhost:3000/api/analytics/tasks", {
+      fetch("/api/analytics/tasks", {
         headers: {
           "userid": currentUser.id,
           "role": currentUser.role
@@ -113,7 +113,7 @@
         });
 
       // User Activity
-      fetch("http://localhost:3000/api/analytics/activity", {
+      fetch("/api/analytics/activity", {
         headers: {
           "userid": currentUser.id,
           "role": currentUser.role

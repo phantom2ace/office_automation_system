@@ -42,7 +42,7 @@ router.post('/config', auth('Admin'), (req, res) => {
       
       // Log audit
       db.run(`INSERT INTO audit_logs (userId, action, module, details) VALUES (?, 'UPDATE', 'SETTINGS', 'Updated system configuration')`, 
-        [req.headers.userid]);
+        [req.user.id]);
         
       res.json({ message: 'Settings updated successfully' });
     });

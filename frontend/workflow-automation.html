@@ -325,7 +325,7 @@
     }
 
     function loadRules() {
-      fetch('http://localhost:3000/api/automation', {
+      fetch('/api/automation', {
         headers: {
           'userid': currentUser.id,
           'role': currentUser.role
@@ -452,7 +452,7 @@
     }
 
     function loadLogs() {
-      fetch('http://localhost:3000/api/automation/logs', {
+      fetch('/api/automation/logs', {
         headers: {
           'userid': currentUser.id,
           'role': currentUser.role

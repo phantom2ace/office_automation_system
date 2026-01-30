@@ -6,7 +6,7 @@ const auth = require('../middleware/auth');
 // Submit Feedback (Employee/Manager)
 router.post('/', auth(), (req, res) => {
     const { type, content, rating } = req.body;
-    const userId = req.headers.userid;
+    const userId = req.user.id;
 
     if (!content) return res.status(400).json({ error: 'Content is required' });
 
@@ -21,7 +21,7 @@ router.post('/', auth(), (req, res) => {
 
 // Get My Feedback (Employee)
 router.get('/my', auth(), (req, res) => {
-    const userId = req.headers.userid;
+    const userId = req.user.id;
     db.all("SELECT * FROM feedback WHERE userId = ? ORDER BY createdAt DESC", [userId], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);

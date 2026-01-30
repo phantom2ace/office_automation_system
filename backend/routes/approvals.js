@@ -5,9 +5,9 @@ const auth = require("../middleware/auth");
 const router = express.Router();
 
 // Submit for approval
-router.post("/submit", (req, res) => {
+router.post("/submit", auth(), (req, res) => {
   const { taskId, level } = req.body;
-  const submittedBy = req.headers.userid;
+  const submittedBy = req.user.id;
 
   db.run(
     `INSERT INTO approvals (taskId, level, status, createdAt)
@@ -38,7 +38,7 @@ router.post("/submit", (req, res) => {
 
 // Get pending approvals (My Approvals + Delegated)
 router.get("/pending", auth("Manager"), (req, res) => {
-  const userId = req.headers.userid;
+  const userId = req.user.id;
 
   // 1. Find who has delegated to me
   db.all(
@@ -83,7 +83,7 @@ router.get("/pending", auth("Manager"), (req, res) => {
 // Approve/Reject
 router.post("/:id/respond", auth("Manager"), (req, res) => {
   const { status, comments } = req.body;
-  const approvedBy = req.headers.userid;
+  const approvedBy = req.user.id;
 
   db.run(
     `UPDATE approvals SET status = ?, approvedBy = ?, comments = ?, approvedAt = datetime('now')
@@ -109,7 +109,7 @@ router.post("/:id/respond", auth("Manager"), (req, res) => {
 // Set Delegation
 router.post("/delegate", auth("Manager"), (req, res) => {
     const { delegateId, startDate, endDate } = req.body;
-    const managerId = req.headers.userid;
+    const managerId = req.user.id;
 
     db.run(`
         INSERT INTO delegations (managerId, delegateId, startDate, endDate)
@@ -135,7 +135,7 @@ router.get("/delegations", auth("Manager"), (req, res) => {
 });
 
 // Get approval history for task
-router.get("/task/:taskId", (req, res) => {
+router.get("/task/:taskId", auth(), (req, res) => {
   db.all(
     `SELECT a.*, u.name as approverName
      FROM approvals a

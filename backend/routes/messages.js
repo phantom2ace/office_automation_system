@@ -5,7 +5,7 @@ const auth = require('../middleware/auth');
 
 // Get chat history with a specific user
 router.get('/history/:otherUserId', auth(), (req, res) => {
-    const userId = req.headers.userid;
+    const userId = req.user.id;
     const { otherUserId } = req.params;
 
     const query = `

@@ -168,7 +168,7 @@
         }
 
         function loadUsers() {
-            fetch('http://localhost:3000/api/users', {
+            fetch('/api/users', {
                 headers: { 'userid': user.id, 'Authorization': user.token }
             })
             .then(res => res.json())
@@ -183,7 +183,7 @@
         }
 
         function loadDelegations() {
-            fetch('http://localhost:3000/api/approvals/delegations', {
+            fetch('/api/approvals/delegations', {
                 headers: { 'userid': user.id, 'Authorization': user.token }
             })
             .then(res => res.json())
@@ -213,7 +213,7 @@
                 endDate: document.getElementById('endDate').value
             };
 
-            fetch('http://localhost:3000/api/approvals/delegate', {
+            fetch('/api/approvals/delegate', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -231,7 +231,7 @@
         }
 
         function loadFeedback() {
-            fetch('http://localhost:3000/api/feedback', {
+            fetch('/api/feedback', {
                 headers: { 'userid': user.id, 'Authorization': user.token }
             })
             .then(res => res.json())
@@ -259,7 +259,7 @@
         }
 
         function markFeedbackRead(id) {
-            fetch(`http://localhost:3000/api/feedback/${id}`, {
+            fetch(`/api/feedback/${id}`, {
                 method: 'PUT',
                 headers: { 
                     'Content-Type': 'application/json',

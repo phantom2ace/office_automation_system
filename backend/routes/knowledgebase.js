@@ -1,16 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
-
-// Middleware to check authentication (Simplified)
-const auth = (role = null) => {
-    return (req, res, next) => {
-        // In a real app, verify token/session
-        // For this demo, we assume the frontend sends a user ID header or similar
-        // Just proceeding for now to keep it simple as per other routes
-        next();
-    };
-};
+const auth = require('../middleware/auth');
 
 // Get all published articles (for employees)
 router.get('/', (req, res) => {
@@ -52,8 +43,9 @@ router.get('/:id', (req, res) => {
 });
 
 // Create article (Manager/Admin)
-router.post('/', auth(), (req, res) => {
-    const { title, content, category, authorId } = req.body;
+router.post('/', auth("Manager"), (req, res) => {
+    const { title, content, category } = req.body;
+    const authorId = req.user.id;
     
     if (!title || !content) {
         return res.status(400).json({ error: 'Title and content are required' });

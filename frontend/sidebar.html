@@ -30,6 +30,14 @@
 </div>
 
 <script>
+  // Logout function
+  function logout(event) {
+    if(event) event.preventDefault();
+    localStorage.removeItem('user');
+    localStorage.removeItem('token'); // In case we use tokens later
+    window.location.href = 'index.html';
+  }
+
   // Set active sidebar item based on current page
   function setActiveSidebarItem() {
     const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';

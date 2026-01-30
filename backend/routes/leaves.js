@@ -7,7 +7,7 @@ const router = express.Router();
 // Apply for leave
 router.post("/apply", auth("Staff"), (req, res) => {
   const { leaveType, startDate, endDate, days, reason } = req.body;
-  const userId = req.headers.userid;
+  const userId = req.user.id;
 
   db.run(
     `INSERT INTO leaves (userId, leaveType, startDate, endDate, days, reason, status, createdAt)
@@ -21,8 +21,8 @@ router.post("/apply", auth("Staff"), (req, res) => {
 });
 
 // Get leaves for user
-router.get("/my", (req, res) => {
-  const userId = req.headers.userid;
+router.get("/my", auth(), (req, res) => {
+  const userId = req.user.id;
 
   db.all(
     "SELECT * FROM leaves WHERE userId = ? ORDER BY startDate DESC",
@@ -51,7 +51,7 @@ router.get("/all", auth("Manager"), (req, res) => {
 // Approve/Reject leave
 router.post("/approve", auth("Manager"), (req, res) => {
   const { leaveId, status, comments } = req.body;
-  const approvedBy = req.headers.userid;
+  const approvedBy = req.user.id;
 
   db.run(
     `UPDATE leaves SET status = ?, approvedBy = ?, approvedAt = datetime('now')

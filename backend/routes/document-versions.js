@@ -1,5 +1,6 @@
 const express = require('express');
 const db = require('../database');
+const auth = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 
@@ -44,7 +45,7 @@ db.run(`
 `);
 
 // Get all versions of a document
-router.get('/document/:documentId/versions', (req, res) => {
+router.get('/document/:documentId/versions', auth(), (req, res) => {
   db.all(
     `SELECT dv.*, u.name as uploadedByName 
      FROM document_versions dv
@@ -60,12 +61,12 @@ router.get('/document/:documentId/versions', (req, res) => {
 });
 
 // Upload new version of document
-router.post('/document/:documentId/upload-version', upload.single('file'), (req, res) => {
+router.post('/document/:documentId/upload-version', auth(), upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file provided' });
   }
 
-  const uploadedBy = req.headers.userid;
+  const uploadedBy = req.user.id;
   const comments = req.body.comments || '';
 
   // Get the current highest version number
@@ -111,9 +112,9 @@ router.get('/document/:documentId/comments', (req, res) => {
 });
 
 // Add comment to document
-router.post('/document/:documentId/comment', (req, res) => {
+router.post('/document/:documentId/comment', auth(), (req, res) => {
   const { comment } = req.body;
-  const userId = req.headers.userid;
+  const userId = req.user.id;
 
   if (!comment) {
     return res.status(400).json({ error: 'Comment cannot be empty' });
@@ -142,8 +143,8 @@ router.delete('/:versionId', (req, res) => {
 });
 
 // Revert to specific version
-router.post('/:versionId/revert', (req, res) => {
-  const userId = req.headers.userid;
+router.post('/:versionId/revert', auth(), (req, res) => {
+  const userId = req.user.id;
 
   db.get(
     'SELECT * FROM document_versions WHERE id = ?',

@@ -18,7 +18,7 @@ router.get("/", (req, res) => {
 // Add inventory item
 router.post("/add", auth("Manager"), (req, res) => {
   const { item, category, quantity, minQuantity, unitPrice, supplier, location } = req.body;
-  const userId = req.headers.userid;
+  const userId = req.user.id;
 
   db.run(
     `INSERT INTO inventory (item, category, quantity, minQuantity, unitPrice, supplier, location, updatedBy, lastUpdated)
@@ -42,7 +42,7 @@ router.post("/add", auth("Manager"), (req, res) => {
 // Update inventory (stock adjustment)
 router.post("/adjust/:id", auth("Manager"), (req, res) => {
   const { quantity, reason } = req.body;
-  const userId = req.headers.userid;
+  const userId = req.user.id;
 
   db.get("SELECT quantity FROM inventory WHERE id = ?", [req.params.id], (err, row) => {
     if (err || !row) return res.status(404).json({ error: "Item not found" });
@@ -80,7 +80,7 @@ router.get("/low-stock", auth("Manager"), (req, res) => {
 });
 
 // Get inventory transactions
-router.get("/:id/transactions", (req, res) => {
+router.get("/:id/transactions", auth("Manager"), (req, res) => {
   db.all(
     `SELECT it.*, u.name as processedByName
      FROM inventory_transactions it

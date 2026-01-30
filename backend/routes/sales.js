@@ -26,7 +26,7 @@ router.post('/deals', auth('Staff'), (req, res) => {
   db.run(`
     INSERT INTO deals (title, value, customerId, stage, expectedCloseDate, assignedTo, updatedAt)
     VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-  `, [title, value, customerId, stage || 'Prospecting', expectedCloseDate, assignedTo || req.headers.userid],
+  `, [title, value, customerId, stage || 'Prospecting', expectedCloseDate, assignedTo || req.user.id],
   function(err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ id: this.lastID, message: 'Deal created successfully' });
@@ -70,7 +70,7 @@ router.post('/leads', auth('Staff'), (req, res) => {
   db.run(`
     INSERT INTO leads (name, email, phone, company, source, assignedTo, notes)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-  `, [name, email, phone, company, source, assignedTo || req.headers.userid, notes], 
+  `, [name, email, phone, company, source, assignedTo || req.user.id, notes], 
   function(err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ id: this.lastID, message: 'Lead created successfully' });
@@ -139,7 +139,7 @@ router.post('/customers', auth('Staff'), (req, res) => {
   db.run(`
     INSERT INTO customers (name, email, phone, company, address, industry, assignedTo)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-  `, [name, email, phone, company, address, industry, assignedTo || req.headers.userid], 
+  `, [name, email, phone, company, address, industry, assignedTo || req.user.id], 
   function(err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ id: this.lastID, message: 'Customer created successfully' });
@@ -169,7 +169,7 @@ router.post('/deals', auth('Staff'), (req, res) => {
   db.run(`
     INSERT INTO deals (title, customerId, value, stage, probability, expectedCloseDate, assignedTo, notes)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `, [title, customerId, value, stage || 'Prospecting', probability || 10, expectedCloseDate, assignedTo || req.headers.userid, notes], 
+  `, [title, customerId, value, stage || 'Prospecting', probability || 10, expectedCloseDate, assignedTo || req.user.id, notes], 
   function(err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ id: this.lastID, message: 'Deal created successfully' });

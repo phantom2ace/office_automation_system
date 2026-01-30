@@ -1,5 +1,6 @@
 const express = require('express');
 const db = require('../database');
+const auth = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -56,7 +57,7 @@ db.run(`
 `);
 
 // Get payroll config for an employee
-router.get('/config/:userId', (req, res) => {
+router.get('/config/:userId', auth(), (req, res) => {
   db.get(
     'SELECT * FROM payroll_config WHERE userId = ?',
     [req.params.userId],
@@ -68,7 +69,7 @@ router.get('/config/:userId', (req, res) => {
 });
 
 // Set or update payroll config
-router.post('/config/:userId', (req, res) => {
+router.post('/config/:userId', auth('Admin'), (req, res) => {
   const { baseSalary, allowances, deductions, taxPercentage, bankAccount, bankName, accountHolder } = req.body;
   const userId = req.params.userId;
 
@@ -84,7 +85,7 @@ router.post('/config/:userId', (req, res) => {
 });
 
 // Get payroll records for an employee
-router.get('/records/:userId', (req, res) => {
+router.get('/records/:userId', auth(), (req, res) => {
   db.all(
     `SELECT pr.*, u.name as processedByName 
      FROM payroll_records pr
@@ -100,9 +101,14 @@ router.get('/records/:userId', (req, res) => {
 });
 
 // Calculate and create payroll record
-router.post('/calculate', (req, res) => {
+router.post('/calculate', auth(), (req, res) => {
   const { userId, paymentMonth } = req.body;
-  const processedBy = req.headers.userid;
+  const processedBy = req.user.id;
+
+  // Verify permission (Admin or HR)
+  if (req.user.role !== 'Admin' && req.user.department !== 'HR') {
+    return res.status(403).json({ error: 'Access denied' });
+  }
 
   // Get payroll config
   db.get(
@@ -144,9 +150,9 @@ router.post('/calculate', (req, res) => {
 });
 
 // Get all payroll records for HR (for processing)
-router.get('/', (req, res) => {
-  const role = req.headers.role;
-  const department = req.headers.department;
+router.get('/', auth(), (req, res) => {
+  const role = req.user.role;
+  const department = req.user.department;
 
   if (role !== 'Admin' && department !== 'HR') {
     return res.status(403).json({ error: 'Access denied' });
@@ -197,8 +203,8 @@ router.post('/attendance/checkin', (req, res) => {
   );
 });
 
-router.post('/attendance/checkout', (req, res) => {
-  const userId = req.headers.userid;
+router.post('/attendance/checkout', auth(), (req, res) => {
+  const userId = req.user.id;
   const date = new Date().toISOString().split('T')[0];
 
   db.get(
@@ -227,7 +233,7 @@ router.post('/attendance/checkout', (req, res) => {
 });
 
 // Get payroll summary for dashboard
-router.get('/summary/:userId', (req, res) => {
+router.get('/summary/:userId', auth(), (req, res) => {
   const userId = req.params.userId;
 
   db.get(

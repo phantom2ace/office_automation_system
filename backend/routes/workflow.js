@@ -1,10 +1,11 @@
 const express = require("express");
 const db = require("../database");
+const auth = require("../middleware/auth");
 
 const router = express.Router();
 
 // Auto check tasks
-router.get("/run", (req, res) => {
+router.get("/run", auth("Admin"), (req, res) => {
 
   // Mark overdue tasks
   db.run(`
