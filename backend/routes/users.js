@@ -27,7 +27,7 @@ router.post("/create", (req, res) => {
   const userId = req.headers.userid;
 
   // Admin check
-  if (userRole !== "Admin") {
+  if (!userRole || userRole.toLowerCase() !== "admin") {
     return res.status(403).json({
       success: false,
       message: "Only admin can create users",
@@ -97,7 +97,7 @@ router.post("/create", (req, res) => {
 router.get("/all", (req, res) => {
   const userRole = req.headers.userrole;
 
-  if (userRole !== "Admin") {
+  if (!userRole || userRole.toLowerCase() !== "admin") {
     return res.status(403).json({
       success: false,
       message: "Only admin can view all users",
@@ -127,7 +127,7 @@ router.put("/:userId", (req, res) => {
     req.body;
   const adminRole = req.headers.userrole;
 
-  if (adminRole !== "Admin") {
+  if (!adminRole || adminRole.toLowerCase() !== "admin") {
     return res.status(403).json({
       success: false,
       message: "Only admin can update users",
@@ -202,7 +202,7 @@ router.delete("/:userId", (req, res) => {
   const { userId } = req.params;
   const userRole = req.headers.userrole;
 
-  if (userRole !== "Admin") {
+  if (!userRole || userRole.toLowerCase() !== "admin") {
     return res.status(403).json({
       success: false,
       message: "Only admin can delete users",

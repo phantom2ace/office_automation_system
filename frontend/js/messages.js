@@ -1,7 +1,7 @@
 const user = JSON.parse(localStorage.getItem("user"));
 
 function sendMessage() {
-  fetch("http://localhost:3000/api/messages/send", {
+  fetch("/api/messages/send", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -12,7 +12,7 @@ function sendMessage() {
   }).then(() => alert("Message sent"));
 }
 
-fetch(`http://localhost:3000/api/messages/${user.id}`)
+fetch(`/api/messages/${user.id}`)
   .then(res => res.json())
   .then(messages => {
     inbox.innerHTML = "";

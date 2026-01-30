@@ -625,7 +625,7 @@
       const userRole = localStorage.getItem('userRole');
       const adminLink = document.getElementById('adminLink');
       
-      if (userRole === 'Admin') {
+      if (userRole && userRole.toLowerCase() === 'admin') {
         adminLink.style.display = 'flex';
         loadUsers();
         setupEventListeners();

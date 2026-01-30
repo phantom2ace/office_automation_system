@@ -79,7 +79,7 @@
       const formData = new FormData();
       formData.append("document", fileInput.files[0]);
 
-      fetch("http://localhost:3000/api/documents/upload", {
+      fetch("/api/documents/upload", {
         method: "POST",
         headers: {
           "userid": currentUser.id,

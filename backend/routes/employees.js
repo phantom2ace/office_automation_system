@@ -10,7 +10,7 @@ const authorizeEmployeeAccess = (req, res, next) => {
   const role = req.headers.role;
   const userDept = req.headers.department;
   
-  if (role === 'Admin' || userDept === 'HR') {
+  if ((role && role.toLowerCase() === 'admin') || (userDept && userDept.toLowerCase() === 'hr')) {
     next();
   } else {
     res.status(403).json({ error: 'Access denied. Only Admin and HR staff can view employees.' });

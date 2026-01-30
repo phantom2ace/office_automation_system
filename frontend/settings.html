@@ -321,7 +321,7 @@
     }
 
     function loadAuditLogs() {
-      fetch('http://localhost:3000/api/settings/audit-logs', {
+      fetch('/api/settings/audit-logs', {
         headers: { 'userid': user.id, 'Authorization': user.token }
       })
       .then(res => res.json())
@@ -345,7 +345,7 @@
     }
 
     function loadSettings() {
-      fetch('http://localhost:3000/api/settings/config', {
+      fetch('/api/settings/config', {
         headers: { 'userid': user.id, 'Authorization': user.token }
       })
       .then(res => res.json())

@@ -119,7 +119,7 @@
     }
 
     function loadInventory() {
-      fetch(`http://localhost:3000/api/inventory/`, {
+      fetch(`/api/inventory/`, {
         headers: {
           "userid": currentUser.id,
           "role": currentUser.role
@@ -155,7 +155,7 @@
     }
 
     function loadStats() {
-      fetch(`http://localhost:3000/api/inventory/analytics/summary`, {
+      fetch(`/api/inventory/analytics/summary`, {
         headers: {
           "userid": currentUser.id,
           "role": currentUser.role
@@ -223,7 +223,7 @@
 
       const reason = prompt("Reason for adjustment:");
 
-      fetch(`http://localhost:3000/api/inventory/adjust/${itemId}`, {
+      fetch(`/api/inventory/adjust/${itemId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

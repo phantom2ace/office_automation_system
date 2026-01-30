@@ -162,6 +162,59 @@
     </div>
   </div>
 
+  <!-- Edit Employee Modal -->
+  <div id="editEmpModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+      <span class="close" onclick="closeEditModal()">&times;</span>
+      <h2 class="mb-4">Edit Employee</h2>
+      <form onsubmit="updateEmployee(event)">
+        <input type="hidden" id="editEmpId">
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="editName" required>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="editEmail" required>
+          </div>
+        </div>
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="form-group">
+            <label>Role</label>
+            <select id="editRole" required>
+              <option value="Staff">Staff</option>
+              <option value="Manager">Manager</option>
+              <option value="Admin">Admin</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <select id="editDept" required>
+              <option value="IT">IT</option>
+              <option value="HR">HR</option>
+              <option value="Finance">Finance</option>
+              <option value="Sales">Sales</option>
+              <option value="Marketing">Marketing</option>
+              <option value="Operations">Operations</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="text" id="editPhone" placeholder="+1234567890">
+          </div>
+          <div class="form-group">
+            <label>Reporting Manager ID</label>
+            <input type="number" id="editManagerId" placeholder="Manager ID (Optional)">
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Update Employee</button>
+      </form>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script>
     // Load Sidebar
@@ -186,7 +239,10 @@
       currentUser = user;
       
       // Check if user is authorized (Admin or HR)
-      if (user.role !== "Admin" && user.department !== "HR") {
+      const role = user.role ? user.role.toLowerCase() : '';
+      const dept = user.department ? user.department.toLowerCase() : '';
+      
+      if (role !== "admin" && dept !== "hr") {
         document.querySelector('.container').innerHTML = `
           <div class="card text-center" style="padding: 40px;">
             <div style="font-size: 3rem; margin-bottom: 20px;">🚫</div>
@@ -298,6 +354,9 @@
     window.onclick = function(event) {
       if (event.target == document.getElementById("addEmpModal")) {
         closeAddModal();
+      }
+      if (event.target == document.getElementById("editEmpModal")) {
+        closeEditModal();
       }
     }
 

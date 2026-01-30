@@ -1,6 +1,6 @@
 const user = JSON.parse(localStorage.getItem("user"));
 
-fetch(`http://localhost:3000/api/tasks/${user.id}`)
+fetch(`/api/tasks/${user.id}`)
   .then(res => res.json())
   .then(tasks => {
     taskList.innerHTML = "";
@@ -18,7 +18,7 @@ fetch(`http://localhost:3000/api/tasks/${user.id}`)
 
 function respond(taskId, status) {
   const reason = prompt("Reason:");
-  fetch("http://localhost:3000/api/tasks/respond", {
+  fetch("/api/tasks/respond", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ taskId, status, reason })

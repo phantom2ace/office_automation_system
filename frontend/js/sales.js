@@ -1,3 +1,4 @@
+const API_BASE_URL = '';
 const user = JSON.parse(localStorage.getItem('user'));
 if (!user) {
   window.location.href = 'index.html';
@@ -158,7 +159,7 @@ function handleDealSubmit(e) {
 // ================= LEADS =================
 
 function loadLeads() {
-  fetch('http://localhost:3000/api/sales/leads', {
+  fetch('/api/sales/leads', {
     headers: { 'userid': user.id }
   })
   .then(res => res.json())
@@ -213,7 +214,7 @@ function handleLeadSubmit(e) {
 function convertLead(id) {
   if(!confirm('Convert this lead to a customer?')) return;
   
-  fetch(`http://localhost:3000/api/sales/leads/${id}/convert`, {
+  fetch(`/api/sales/leads/${id}/convert`, {
     method: 'POST',
     headers: { 'userid': user.id }
   })
