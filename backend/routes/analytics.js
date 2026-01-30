@@ -121,5 +121,23 @@ router.get("/metrics", auth("Manager"), (req, res) => {
   );
 });
 
+// System Logs (Combined recent activity)
+router.get("/logs", auth("Admin"), (req, res) => {
+  const query = `
+    SELECT 'Task' as type, title as description, updatedAt as timestamp, assignedTo as userId FROM tasks
+    UNION ALL
+    SELECT 'User' as type, name || ' joined' as description, createdAt as timestamp, id as userId FROM users
+    UNION ALL
+    SELECT 'Message' as type, 'New message sent' as description, timestamp, senderId as userId FROM messages
+    ORDER BY timestamp DESC
+    LIMIT 50
+  `;
+  
+  db.all(query, (err, rows) => {
+    if (err) return res.status(500).json(err);
+    res.json(rows);
+  });
+});
+
 module.exports = router;
 

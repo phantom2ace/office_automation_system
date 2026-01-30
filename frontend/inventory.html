@@ -7,32 +7,7 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <!-- Sidebar Navigation -->
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <h2>🏢 OfficeApp</h2>
-    </div>
-    
-    <div class="sidebar-nav">
-      <a href="dashboard.html" id="nav-dashboard">📊 Dashboard</a>
-      <a href="tasks.html" id="nav-tasks">✅ Tasks</a>
-      <a href="messages.html" id="nav-messages">✉️ Messages</a>
-      <a href="documents.html" id="nav-documents">📄 Documents</a>
-      <a href="calendar.html" id="nav-calendar">📅 Calendar</a>
-      <a href="leaves.html" id="nav-leaves">🏖️ Leaves</a>
-      <a href="employees.html" id="nav-employees">👥 Employees</a>
-      <a href="finance.html" id="nav-finance">💰 Finance</a>
-      <a href="inventory.html" id="nav-inventory" class="active">📦 Inventory</a>
-      <a href="resources.html" id="nav-resources">⚙️ Resources</a>
-      <a href="performance.html" id="nav-performance">⭐ Performance</a>
-      <a href="analytics.html" id="nav-analytics">📈 Analytics</a>
-      <a href="user-management.html" id="nav-users" style="display: none;">👤 User Management</a>
-    </div>
-
-    <div class="sidebar-footer">
-      <button onclick="logout(event)">🚪 Logout</button>
-    </div>
-  </div>
+  <div id="sidebar-container"></div>
 
   <div class="main-content">
     <div class="container">
@@ -92,7 +67,7 @@
           <input type="text" id="itemLocation" placeholder="Storage location">
         </div>
       </div>
-      <button onclick="addItem()">Add Item</button>
+      <button class="btn-primary" onclick="addItem()">Add Item</button>
     </div>
 
     <div class="card">
@@ -119,6 +94,17 @@
   </div>
 
   <script>
+    // Load Sidebar
+    fetch('sidebar.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('sidebar-container').innerHTML = data;
+        const scripts = document.getElementById('sidebar-container').getElementsByTagName('script');
+        for(let script of scripts) {
+          eval(script.innerText);
+        }
+      });
+
     let currentUser = null;
 
     function loadPage() {
@@ -253,6 +239,16 @@
           loadStats();
         })
         .catch(() => showMessage("Error adjusting inventory", "error"));
+    }
+
+    function showMessage(message, type) {
+      const msgDiv = document.getElementById("message");
+      msgDiv.textContent = message;
+      msgDiv.className = `alert ${type}`;
+      msgDiv.style.display = "block";
+      setTimeout(() => {
+        msgDiv.style.display = "none";
+      }, 3000);
     }
 
     function logout(e) {

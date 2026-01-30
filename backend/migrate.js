@@ -1,21 +1,35 @@
 // backend/migrate.js
+require('dotenv').config();
 const admin = require('firebase-admin');
-const serviceAccount = require('./service-account-key.json');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
 // Initialize Firebase Admin
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://office-automation-30c8b-default-rtdb.firebaseio.com'
-});
+// Try to use environment variable for service account if available, otherwise fallback to file
+let serviceAccount;
+try {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  } else {
+    serviceAccount = require('./service-account-key.json');
+  }
+} catch (error) {
+  console.warn('⚠️  Could not load service account credentials. Firebase migration may fail.');
+}
+
+if (serviceAccount) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://oas-trial-default-rtdb.firebaseio.com'
+  });
+}
 
 // SQLite database file path
 const dbPath = path.join(__dirname, 'office.db');
 
 // Create SQLite database connection
 console.log('🔍 Connecting to SQLite database:', dbPath);
-const db = new sqlite3.Database('database.sqlite', (err) => {
+const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('❌ Error connecting to SQLite database:', err.message);
     process.exit(1);

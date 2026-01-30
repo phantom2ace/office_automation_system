@@ -16,7 +16,7 @@ router.post("/submit", (req, res) => {
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
 
-      // Create notification for manager
+      // Create notification for manager (Task Creator)
       db.get(
         `SELECT assignedBy FROM tasks WHERE id = ?`,
         [taskId],
@@ -36,21 +36,46 @@ router.post("/submit", (req, res) => {
   );
 });
 
-// Get pending approvals
+// Get pending approvals (My Approvals + Delegated)
 router.get("/pending", auth("Manager"), (req, res) => {
   const userId = req.headers.userid;
 
+  // 1. Find who has delegated to me
   db.all(
-    `SELECT a.*, t.title, t.description, u.name as submittedByName
-     FROM approvals a
-     JOIN tasks t ON a.taskId = t.id
-     JOIN users u ON t.assignedTo = u.id
-     WHERE a.status = 'Pending'
-     AND a.approvedBy IS NULL
-     ORDER BY a.createdAt DESC`,
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json(rows);
+    `SELECT managerId FROM delegations 
+     WHERE delegateId = ? AND status = 'Active' 
+     AND (startDate IS NULL OR startDate <= date('now'))
+     AND (endDate IS NULL OR endDate >= date('now'))`,
+    [userId],
+    (err, delegations) => {
+        if (err) return res.status(500).json({ error: err.message });
+        
+        const approverIds = [userId, ...delegations.map(d => d.managerId)];
+        const placeholders = approverIds.map(() => '?').join(',');
+
+        // 2. Find pending approvals where task creator is in approverIds
+        const query = `
+            SELECT a.*, t.title, t.description, u.name as submittedByName, t.assignedBy as approverId
+            FROM approvals a
+            JOIN tasks t ON a.taskId = t.id
+            JOIN users u ON t.assignedTo = u.id
+            WHERE a.status = 'Pending'
+            AND a.approvedBy IS NULL
+            AND t.assignedBy IN (${placeholders})
+            ORDER BY a.createdAt DESC
+        `;
+
+        db.all(query, approverIds, (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            
+            // Mark which ones are delegated
+            const results = rows.map(row => ({
+                ...row,
+                isDelegated: row.approverId != userId
+            }));
+            
+            res.json(results);
+        });
     }
   );
 });
@@ -79,6 +104,34 @@ router.post("/:id/respond", auth("Manager"), (req, res) => {
       res.json({ message: `Approval ${status}` });
     }
   );
+});
+
+// Set Delegation
+router.post("/delegate", auth("Manager"), (req, res) => {
+    const { delegateId, startDate, endDate } = req.body;
+    const managerId = req.headers.userid;
+
+    db.run(`
+        INSERT INTO delegations (managerId, delegateId, startDate, endDate)
+        VALUES (?, ?, ?, ?)
+    `, [managerId, delegateId, startDate, endDate], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Delegation active', id: this.lastID });
+    });
+});
+
+// Get My Delegations
+router.get("/delegations", auth("Manager"), (req, res) => {
+    const userId = req.headers.userid;
+    db.all(`
+        SELECT d.*, u.name as delegateName 
+        FROM delegations d
+        JOIN users u ON d.delegateId = u.id
+        WHERE d.managerId = ?
+    `, [userId], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
 });
 
 // Get approval history for task

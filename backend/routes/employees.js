@@ -1,6 +1,7 @@
 const express = require("express");
 const db = require("../database");
 const auth = require("../middleware/auth");
+const bcrypt = require("bcryptjs");
 
 const router = express.Router();
 
@@ -23,6 +24,32 @@ router.get("/auth/check", (req, res) => {
   
   const authorized = role === 'Admin' || department === 'HR';
   res.json({ authorized });
+});
+
+// Add new employee
+router.post("/", authorizeEmployeeAccess, async (req, res) => {
+  const { name, email, password, department, role, designation, phone, reportingManager } = req.body;
+
+  if (!name || !email || !password || !role) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    db.run(
+      `INSERT INTO users (name, email, password, department, role, designation, phone, reportingManager, status, availability, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Active', 'Available', datetime('now'))`,
+      [name, email, hashedPassword, department, role, designation, phone, reportingManager],
+      function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: "Employee added successfully", id: this.lastID });
+      }
+    );
+  } catch (err) {
+    res.status(500).json({ error: "Error creating employee" });
+  }
 });
 
 // Get all employees

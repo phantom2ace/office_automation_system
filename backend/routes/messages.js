@@ -1,23 +1,23 @@
 const express = require('express');
 const router = express.Router();
+const db = require('../database');
+const auth = require('../middleware/auth');
 
-// Only needed for server-side operations
-router.get('/user-profile/:userId', (req, res) => {
-  // Still needed if you have additional user profile data
-});
+// Get chat history with a specific user
+router.get('/history/:otherUserId', auth(), (req, res) => {
+    const userId = req.headers.userid;
+    const { otherUserId } = req.params;
 
-// Add this endpoint for Firebase token generation if needed
-router.post('/firebase-token', (req, res) => {
-  const { userId } = req.body;
-  
-  // Generate custom token for Firebase Auth
-  admin.auth().createCustomToken(userId)
-    .then((customToken) => {
-      res.json({ token: customToken });
-    })
-    .catch((error) => {
-      console.error('Error creating custom token:', error);
-      res.status(500).json({ error: 'Failed to generate token' });
+    const query = `
+        SELECT * FROM messages 
+        WHERE (senderId = ? AND receiverId = ?) 
+           OR (senderId = ? AND receiverId = ?)
+        ORDER BY timestamp ASC
+    `;
+    
+    db.all(query, [userId, otherUserId, otherUserId, userId], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
     });
 });
 

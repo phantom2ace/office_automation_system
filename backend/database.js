@@ -1,6 +1,10 @@
 const sqlite3 = require("sqlite3").verbose();
+const path = require('path');
 
-const db = new sqlite3.Database("./office.db", (err) => {
+// Use environment variable for DB path (useful for Render Disks) or default to local file
+const dbPath = process.env.DB_PATH || path.join(__dirname, "office.db");
+
+const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.log("Database connection error:", err);
   } else {
@@ -98,6 +102,35 @@ const initDb = () => {
 
     // Leave management
     db.run(`CREATE TABLE IF NOT EXISTS leaves (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId INTEGER NOT NULL,
+      leaveType TEXT,
+      startDate TEXT,
+      endDate TEXT,
+      reason TEXT,
+      status TEXT DEFAULT 'Pending',
+      approvedBy INTEGER,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users(id)
+    )`);
+
+    // Sales Deals
+    db.run(`CREATE TABLE IF NOT EXISTS deals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      value REAL,
+      customerId INTEGER,
+      stage TEXT DEFAULT 'Prospecting',
+      expectedCloseDate TEXT,
+      assignedTo INTEGER,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT,
+      FOREIGN KEY (customerId) REFERENCES customers(id),
+      FOREIGN KEY (assignedTo) REFERENCES users(id)
+    )`);
+
+    // Leads table
+    db.run(`CREATE TABLE IF NOT EXISTS leads (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId INTEGER NOT NULL,
       leaveType TEXT,
@@ -262,6 +295,13 @@ const initDb = () => {
       FOREIGN KEY (userId) REFERENCES users(id)
     )`);
 
+    // System Settings (Key-Value Store)
+    db.run(`CREATE TABLE IF NOT EXISTS system_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+    )`);
+
     // Help Desk Tickets (for IT department support)
     db.run(`CREATE TABLE IF NOT EXISTS helpdesk_tickets (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -286,6 +326,97 @@ const initDb = () => {
       FOREIGN KEY (userId) REFERENCES users(id),
       FOREIGN KEY (assignedTo) REFERENCES users(id),
       FOREIGN KEY (escalatedBy) REFERENCES users(id)
+    )`);
+
+    // ================= CRM / SALES MODULE =================
+
+    // Leads (Potential Clients)
+    db.run(`CREATE TABLE IF NOT EXISTS leads (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT,
+      phone TEXT,
+      company TEXT,
+      source TEXT,
+      status TEXT DEFAULT 'New', -- New, Contacted, Qualified, Lost, Converted
+      assignedTo INTEGER,
+      notes TEXT,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT,
+      FOREIGN KEY (assignedTo) REFERENCES users(id)
+    )`);
+
+    // Customers (Converted Leads / Active Clients)
+    db.run(`CREATE TABLE IF NOT EXISTS customers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT,
+      phone TEXT,
+      company TEXT,
+      address TEXT,
+      industry TEXT,
+      status TEXT DEFAULT 'Active',
+      assignedTo INTEGER,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT,
+      FOREIGN KEY (assignedTo) REFERENCES users(id)
+    )`);
+
+    // Deals (Sales Pipeline)
+    db.run(`CREATE TABLE IF NOT EXISTS deals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      customerId INTEGER,
+      value REAL,
+      currency TEXT DEFAULT 'USD',
+      stage TEXT DEFAULT 'Prospecting', -- Prospecting, Qualification, Proposal, Negotiation, Closed Won, Closed Lost
+      probability INTEGER DEFAULT 10,
+      expectedCloseDate TEXT,
+      assignedTo INTEGER,
+      notes TEXT,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT,
+      FOREIGN KEY (customerId) REFERENCES customers(id),
+      FOREIGN KEY (assignedTo) REFERENCES users(id)
+    )`);
+
+    // Knowledge Base (Articles / FAQ)
+    db.run(`CREATE TABLE IF NOT EXISTS knowledge_base (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      category TEXT,
+      authorId INTEGER,
+      isPublished INTEGER DEFAULT 1,
+      views INTEGER DEFAULT 0,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT,
+      FOREIGN KEY (authorId) REFERENCES users(id)
+    )`);
+
+    // Delegations (Manager -> Delegate)
+    db.run(`CREATE TABLE IF NOT EXISTS delegations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      managerId INTEGER NOT NULL,
+      delegateId INTEGER NOT NULL,
+      startDate TEXT,
+      endDate TEXT,
+      status TEXT DEFAULT 'Active',
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (managerId) REFERENCES users(id),
+      FOREIGN KEY (delegateId) REFERENCES users(id)
+    )`);
+
+    // System Feedback (Improvement Loop)
+    db.run(`CREATE TABLE IF NOT EXISTS feedback (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId INTEGER,
+      type TEXT, -- Workflow, Usability, Feature Request
+      content TEXT NOT NULL,
+      rating INTEGER,
+      status TEXT DEFAULT 'New',
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users(id)
     )`);
 
     // Sample data - inserted after all tables created

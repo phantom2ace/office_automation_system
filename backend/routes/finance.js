@@ -33,4 +33,15 @@ router.get("/summary", (req, res) => {
   );
 });
 
+// Get recent transactions
+router.get("/list", (req, res) => {
+  db.all(
+    `SELECT * FROM finance ORDER BY createdAt DESC LIMIT 20`,
+    (err, rows) => {
+      if (err) return res.status(500).json(err);
+      res.json(rows);
+    }
+  );
+});
+
 module.exports = router;

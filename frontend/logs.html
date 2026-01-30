@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Logs - Office Automation</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .log-container {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+    }
+    .log-item {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: background 0.2s;
+    }
+    .log-item:hover {
+      background: rgba(255,255,255,0.02);
+    }
+    .log-item:last-child {
+      border-bottom: none;
+    }
+    .log-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+    .log-content {
+      flex: 1;
+    }
+    .log-time {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .type-Task { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .type-User { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .type-Message { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+  </style>
+</head>
+<body>
+  <div id="sidebar-container"></div>
+
+  <div class="main-content">
+    <div class="container">
+      <div class="header-actions">
+        <h1>📜 System Logs</h1>
+        <button class="btn-secondary" onclick="loadLogs()">🔄 Refresh</button>
+      </div>
+
+      <div class="log-container" id="logsList">
+        <div class="text-center" style="padding: 2rem;">Loading logs...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Load Sidebar
+    fetch('sidebar.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('sidebar-container').innerHTML = data;
+        const scripts = document.getElementById('sidebar-container').getElementsByTagName('script');
+        for(let script of scripts) {
+          eval(script.innerText);
+        }
+      });
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.role !== 'Admin') {
+      window.location.href = 'dashboard.html';
+    }
+
+    function loadLogs() {
+      fetch('/api/analytics/logs', {
+        headers: { 'userid': user.id, 'Authorization': user.token }
+      })
+      .then(res => res.json())
+      .then(logs => {
+        const container = document.getElementById('logsList');
+        if (logs.length === 0) {
+          container.innerHTML = '<div class="text-center" style="padding: 2rem;">No recent activity found</div>';
+          return;
+        }
+
+        container.innerHTML = logs.map(log => `
+          <div class="log-item">
+            <div class="log-icon type-${log.type}">
+              ${getIcon(log.type)}
+            </div>
+            <div class="log-content">
+              <div style="font-weight: 500;">${log.description}</div>
+              <div class="log-time">${new Date(log.timestamp).toLocaleString()}</div>
+            </div>
+            <div class="badge ${log.type === 'Task' ? 'info' : log.type === 'User' ? 'success' : 'warning'}">
+              ${log.type}
+            </div>
+          </div>
+        `).join('');
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('logsList').innerHTML = '<div class="alert error">Error loading logs</div>';
+      });
+    }
+
+    function getIcon(type) {
+      if (type === 'Task') return '📋';
+      if (type === 'User') return '👤';
+      if (type === 'Message') return '✉️';
+      return '📝';
+    }
+
+    window.onload = loadLogs;
+  </script>
+</body>
+</html>

@@ -7,111 +7,153 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <!-- Sidebar Navigation -->
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <h2>🏢 OfficeApp</h2>
-    </div>
-    
-    <div class="sidebar-nav">
-      <a href="dashboard.html" id="nav-dashboard" class="active">📊 Dashboard</a>
-      <a href="tasks.html" id="nav-tasks">✅ Tasks</a>
-      <a href="messages.html" id="nav-messages">✉️ Messages</a>
-      <a href="documents.html" id="nav-documents">📄 Documents</a>
-      <a href="calendar.html" id="nav-calendar">📅 Calendar</a>
-      <a href="leaves.html" id="nav-leaves">🏖️ Leaves</a>
-      <a href="employees.html" id="nav-employees">👥 Employees</a>
-      <a href="finance.html" id="nav-finance">💰 Finance</a>
-      <a href="inventory.html" id="nav-inventory">📦 Inventory</a>
-      <a href="resources.html" id="nav-resources">⚙️ Resources</a>
-      <a href="performance.html" id="nav-performance">⭐ Performance</a>
-      <a href="analytics.html" id="nav-analytics">📈 Analytics</a>
-      <a href="user-management.html" id="nav-users" style="display: none;">👤 User Management</a>
-    </div>
-
-    <div class="sidebar-footer">
-      <button onclick="logout(event)">🚪 Logout</button>
-    </div>
-  </div>
+  <div id="sidebar-container"></div>
 
   <div class="main-content">
     <div class="container">
       <div id="message" class="alert" style="display: none;"></div>
 
+      <!-- Header Section -->
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h2 id="welcomeMsg">Welcome back! 👋</h2>
+          <p class="text-muted" id="dateDisplay"></p>
+        </div>
+        <div class="flex items-center gap-4">
+           <div class="text-right">
+             <h4 id="userName" style="margin:0;">User</h4>
+             <span id="userRole" class="badge info">Role</span>
+           </div>
+           <div style="width: 40px; height: 40px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;">
+             <span id="userInitial">U</span>
+           </div>
+        </div>
+      </div>
+
+      <!-- Department Tools Section (Dynamic) -->
+      <div id="departmentTools" style="display: none; margin-bottom: 32px;">
+        <h3 class="mb-4">🚀 <span id="deptName">Department</span> Tools</h3>
+        <p class="text-muted mb-4" id="toolsDescription"></p>
+        <div class="grid" id="departmentButtons">
+           <!-- Buttons injected here -->
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-bottom: 32px;">
+        <div class="card" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white;">
+          <div class="flex justify-between items-center mb-4">
+             <h3 style="color: white;">📋 My Tasks</h3>
+             <span class="badge" style="background: rgba(255,255,255,0.2); color: white;" id="pendingCount">0 Pending</span>
+          </div>
+          <div class="flex items-end gap-2">
+            <h1 id="taskCount" style="font-size: 3rem; line-height: 1;">0</h1>
+            <span style="opacity: 0.8;">Total</span>
+          </div>
+          <div class="mt-4">
+            <button onclick="location.href='tasks.html'" style="width: 100%; background: white; color: var(--primary-color); border: none;">View All Tasks</button>
+          </div>
+        </div>
+
+        <div class="card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+          <div class="flex justify-between items-center mb-4">
+             <h3 style="color: white;">✉️ Messages</h3>
+             <span class="badge" style="background: rgba(255,255,255,0.2); color: white;" id="socketStatus">Connecting...</span>
+          </div>
+          <div class="flex items-end gap-2">
+            <h1 id="messageCount" style="font-size: 3rem; line-height: 1;">0</h1>
+            <span style="opacity: 0.8;">Unread</span>
+          </div>
+          <div class="mt-4">
+            <button onclick="location.href='messages.html'" style="width: 100%; background: white; color: var(--success); border: none;">Open Chat</button>
+          </div>
+        </div>
+
+        <div class="card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
+          <div class="flex justify-between items-center mb-4">
+             <h3 style="color: white;">📄 Documents</h3>
+          </div>
+          <div class="flex items-end gap-2">
+            <h1 id="docCount" style="font-size: 3rem; line-height: 1;">0</h1>
+            <span style="opacity: 0.8;">Files</span>
+          </div>
+          <div class="mt-4">
+            <button onclick="location.href='documents.html'" style="width: 100%; background: white; color: #d97706; border: none;">Browse Files</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity / Tasks Table -->
       <div class="card">
-        <h3>Welcome, <span id="userName">User</span>! 👋</h3>
-        <p>Department: <strong id="userDept">-</strong></p>
-        <p>Role: <strong id="userRole">-</strong></p>
-        <p id="departmentMsg" style="color: #667eea; font-weight: bold; margin-top: 10px;"></p>
-      </div>
-
-      <div id="departmentTools" style="display: none;">
-        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-          <h3>🔧 Department Tools</h3>
-          <p id="toolsDescription"></p>
-          <div id="departmentButtons"></div>
+        <div class="flex justify-between items-center mb-4">
+          <h3>📝 Recent Tasks</h3>
+          <button onclick="location.href='tasks.html'" class="btn-secondary" style="font-size: 0.8rem; padding: 6px 12px;">View All</button>
         </div>
-      </div>
-
-      <div class="grid">
-        <div class="card">
-          <h3>📋 Quick Stats</h3>
-          <p>Total Tasks: <strong id="taskCount">0</strong></p>
-          <p>Pending: <strong id="pendingCount">0</strong></p>
-          <p>Completed: <strong id="completedCount">0</strong></p>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="taskTable">
+              <tr>
+                <td colspan="5" class="text-center">Loading tasks...</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-
-        <div class="card">
-          <h3>✉️ Messages</h3>
-          <p>Unread: <strong id="messageCount">0</strong></p>
-          <button onclick="location.href='messages.html'">Go to Messages</button>
-        </div>
-
-        <div class="card">
-          <h3>📄 Documents</h3>
-          <p>Total Files: <strong id="docCount">0</strong></p>
-          <button onclick="location.href='documents.html'">View Documents</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>📝 Recent Tasks</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Department</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="taskTable">
-            <tr>
-              <td colspan="4" style="text-align: center;">Loading...</td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div>
   </div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script>
+    // Load Sidebar
+    fetch('sidebar.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('sidebar-container').innerHTML = data;
+        const scripts = document.getElementById('sidebar-container').getElementsByTagName('script');
+        for(let script of scripts) {
+          eval(script.innerText);
+        }
+      });
+
     let currentUser = null;
+    const socket = io();
+
+    socket.on('connect', () => {
+        document.getElementById('socketStatus').textContent = 'Online';
+        document.getElementById('socketStatus').className = 'badge success';
+    });
+
+    socket.on('disconnect', () => {
+        document.getElementById('socketStatus').textContent = 'Offline';
+        document.getElementById('socketStatus').className = 'badge inactive';
+    });
 
     function showDepartmentTools() {
       const dept = currentUser.department;
+      document.getElementById('deptName').textContent = dept;
+      
       const toolsDiv = document.getElementById("departmentTools");
       const buttonsDiv = document.getElementById("departmentButtons");
       const descDiv = document.getElementById("toolsDescription");
 
       let tools = {};
+      // Define tools logic (same as before but structured for grid)
       switch(dept) {
         case "Finance":
           tools = {
             description: "Access financial tools including calculator, expense tracking, and reports",
             buttons: [
-              { text: "🧮 Finance Calculator", link: "calculator.html" },
-              { text: "💰 Expense Tracking", link: "finance.html" }
+              { text: "🧮 Finance Calculator", link: "calculator.html", desc: "Calculate taxes & interest" },
+              { text: "💰 Expense Tracking", link: "finance.html", desc: "Track company expenses" }
             ]
           };
           break;
@@ -119,8 +161,8 @@
           tools = {
             description: "Manage IT operations including help desk tickets and resource management",
             buttons: [
-              { text: "🆘 Help Desk", link: "helpdesk.html" },
-              { text: "🖥️ Resources", link: "resources.html" }
+              { text: "🆘 Help Desk", link: "helpdesk.html", desc: "Manage support tickets" },
+              { text: "🖥️ Resources", link: "resources.html", desc: "Inventory & Assignments" }
             ]
           };
           break;
@@ -128,8 +170,8 @@
           tools = {
             description: "Manage human resources including employee records and leave management",
             buttons: [
-              { text: "👥 Employee Management", link: "employees.html" },
-              { text: "🏖️ Leave Management", link: "leaves.html" }
+              { text: "👥 Employee Management", link: "employees.html", desc: "Staff directory & records" },
+              { text: "🏖️ Leave Management", link: "leaves.html", desc: "Approve/Reject leaves" }
             ]
           };
           break;
@@ -137,8 +179,9 @@
           tools = {
             description: "Track sales activities and performance metrics",
             buttons: [
-              { text: "📊 Analytics", link: "analytics.html" },
-              { text: "⭐ Performance", link: "performance.html" }
+              { text: "📊 Analytics", link: "analytics.html", desc: "Sales reports & graphs" },
+              { text: "⭐ Performance", link: "performance.html", desc: "Team KPIs" },
+              { text: "💼 CRM", link: "sales.html", desc: "Leads & Pipeline" }
             ]
           };
           break;
@@ -152,7 +195,12 @@
       if (tools.buttons.length > 0) {
         descDiv.textContent = tools.description;
         buttonsDiv.innerHTML = tools.buttons
-          .map(btn => `<button onclick="location.href='${btn.link}'" style="margin: 5px; padding: 10px 15px; background: white; color: #667eea; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">${btn.text}</button>`)
+          .map(btn => `
+            <div class="card" style="margin-bottom: 0; cursor: pointer;" onclick="location.href='${btn.link}'">
+                <h4 style="margin-bottom: 8px;">${btn.text}</h4>
+                <p class="text-muted" style="font-size: 0.9rem;">${btn.desc}</p>
+            </div>
+          `)
           .join("");
         toolsDiv.style.display = "block";
       }
@@ -167,16 +215,24 @@
 
       currentUser = user;
       document.getElementById("userName").textContent = user.name;
-      document.getElementById("userDept").textContent = user.department || "N/A";
+      document.getElementById("welcomeMsg").textContent = `Welcome back, ${user.name.split(' ')[0]}! 👋`;
+      document.getElementById("userInitial").textContent = user.name.charAt(0).toUpperCase();
       document.getElementById("userRole").textContent = user.role || "N/A";
+      document.getElementById("dateDisplay").textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+      // Identify special admin link
+      if (user.role === 'Admin') {
+         // Could add special admin widgets here
+      }
 
       showDepartmentTools();
+      loadQuickActions();
       loadTasks();
       loadStats();
     }
 
     function loadTasks() {
-      fetch(`http://localhost:3000/api/tasks/${currentUser.id}`, {
+      fetch(`/api/tasks/${currentUser.id}`, {
         headers: {
           "userid": currentUser.id,
           "role": currentUser.role
@@ -186,24 +242,29 @@
         .then(tasks => {
           const tbody = document.getElementById("taskTable");
           if (tasks.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No tasks assigned</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center">No tasks assigned</td></tr>';
             return;
           }
 
           tbody.innerHTML = tasks.slice(0, 5).map(task => `
             <tr>
-              <td>${task.title}</td>
+              <td><span style="font-weight: 500;">${task.title}</span></td>
               <td>${task.department}</td>
-              <td><span class="badge ${task.status.toLowerCase()}">${task.status}</span></td>
-              <td><button onclick="viewTask(${task.id})" style="width: 100%; padding: 5px;">View</button></td>
+              <td><span class="badge ${task.status.toLowerCase().replace(' ', '_')}">${task.status}</span></td>
+              <td><span class="badge ${task.priority ? task.priority.toLowerCase() : 'medium'}">${task.priority || 'Medium'}</span></td>
+              <td><button class="btn-secondary" onclick="viewTask(${task.id})" style="padding: 4px 10px; font-size: 0.8rem;">View</button></td>
             </tr>
           `).join("");
         })
-        .catch(err => console.error(err));
+        .catch(err => {
+            console.error(err);
+            document.getElementById("taskTable").innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error loading tasks</td></tr>';
+        });
     }
 
     function loadStats() {
-      fetch(`http://localhost:3000/api/tasks/${currentUser.id}`, {
+      // Reusing tasks endpoint for stats for now, should ideally be separate
+      fetch(`/api/tasks/${currentUser.id}`, {
         headers: {
           "userid": currentUser.id,
           "role": currentUser.role
@@ -213,11 +274,70 @@
         .then(tasks => {
           document.getElementById("taskCount").textContent = tasks.length;
           const pending = tasks.filter(t => t.status === "Pending").length;
-          const completed = tasks.filter(t => t.status === "Completed").length;
-          document.getElementById("pendingCount").textContent = pending;
-          document.getElementById("completedCount").textContent = completed;
+          document.getElementById("pendingCount").textContent = `${pending} Pending`;
         })
         .catch(err => console.error(err));
+    }
+
+    function loadQuickActions() {
+        const role = currentUser.role;
+        const dept = currentUser.department;
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'card mb-4';
+        actionsDiv.style.marginBottom = '24px';
+        
+        let actions = [];
+        
+        if (role === 'Admin') {
+            actions = [
+                { label: 'Add User', icon: '👤', action: "location.href='user-management.html'" },
+                { label: 'System Settings', icon: '⚙️', action: "location.href='settings.html'" },
+                { label: 'View Logs', icon: '📜', action: "location.href='logs.html'" }
+            ];
+        } else if (role === 'Manager') {
+            actions = [
+                { label: 'Approve Leaves', icon: '✅', action: "location.href='leaves.html'" },
+                { label: 'Team Performance', icon: '⭐', action: "location.href='performance.html'" },
+                { label: 'Assign Task', icon: '📋', action: "location.href='tasks.html'" }
+            ];
+        } else if (dept === 'Sales') {
+            actions = [
+                { label: 'New Lead', icon: '💼', action: "location.href='sales.html'" },
+                { label: 'My Pipeline', icon: '📊', action: "location.href='sales.html'" }
+            ];
+        } else {
+             actions = [
+                { label: 'New Task', icon: '➕', action: "location.href='tasks.html'" },
+                { label: 'Request Leave', icon: '🏖️', action: "location.href='leaves.html'" }
+            ];
+        }
+
+        if(actions.length > 0) {
+            actionsDiv.innerHTML = `
+                <h3 class="mb-4">⚡ Quick Actions</h3>
+                <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px;">
+                    ${actions.map(a => `
+                        <div onclick="${a.action}" style="
+                            background: var(--bg-card); 
+                            border: 1px solid var(--border-color); 
+                            border-radius: 12px; 
+                            padding: 20px; 
+                            text-align: center; 
+                            cursor: pointer; 
+                            transition: transform 0.2s, box-shadow 0.2s;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                        " onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 15px -3px rgba(0, 0, 0, 0.1)'" 
+                          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)'">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">${a.icon}</div>
+                            <div style="font-weight: 600; color: var(--text-main);">${a.label}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            // Insert after department tools
+            const deptTools = document.getElementById('departmentTools');
+            deptTools.parentNode.insertBefore(actionsDiv, deptTools.nextSibling);
+        }
     }
 
     function viewTask(taskId) {
@@ -225,28 +345,18 @@
     }
 
     function logout(e) {
-      e.preventDefault();
+      if(e) e.preventDefault();
       localStorage.removeItem("user");
       window.location.href = "index.html";
     }
 
     window.onload = function() {
       loadDashboard();
-      // Show user management link for admins
+      // Show user management link for admins handled in sidebar.html logic usually, but here we can double check
       const user = JSON.parse(localStorage.getItem('user'));
-      if (user && user.role === 'Admin') {
-        const navUsers = document.getElementById('nav-users');
-        if (navUsers) navUsers.style.display = 'block';
-      }
-      // Hide employees link for non-authorized users
-      if (user && !(user.role === 'Admin' || user.department === 'HR')) {
-        const empLink = document.getElementById('nav-employees');
-        if (empLink) empLink.style.display = 'none';
-      }
       
-      // Auto-refresh tasks and stats every 5 seconds for real-time updates
-      setInterval(loadTasks, 5000);
-      setInterval(loadStats, 5000);
+      setInterval(loadTasks, 10000); // Increased interval to reduce load
+      setInterval(loadStats, 10000);
     };
   </script>
 </body>

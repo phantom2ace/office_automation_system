@@ -1,5 +1,5 @@
 // backend/middleware/auth.js
-const db = require("../config/database");
+const db = require("../database");
 
 module.exports = function(requiredRole) {
   return (req, res, next) => {

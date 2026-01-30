@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Settings - Office Automation System</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .settings-container {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 2rem;
+    }
+    
+    .settings-nav {
+      background: var(--bg-card);
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      height: fit-content;
+      border: 1px solid var(--border-color);
+    }
+    
+    .settings-nav a {
+      display: block;
+      padding: 0.75rem 1rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      transition: background 0.2s;
+    }
+    
+    .settings-nav a:hover, .settings-nav a.active {
+      background-color: var(--bg-secondary);
+      color: var(--primary-color);
+      font-weight: 500;
+    }
+    
+    .settings-content {
+      background: var(--bg-card);
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border: 1px solid var(--border-color);
+    }
+    
+    .section-title {
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 1rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+    }
+    
+    .config-group {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .config-group:last-child {
+      border-bottom: none;
+    }
+    
+    .config-group label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+    
+    .config-group small {
+      display: block;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--text-secondary);
+      transition: .4s;
+      border-radius: 24px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background-color: var(--primary-color);
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    
+    .backup-list {
+      margin-top: 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+    }
+    
+    .backup-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+    
+    .backup-item:last-child {
+      border-bottom: none;
+    }
+    
+    .btn-restore {
+      padding: 0.5rem 1rem;
+      background-color: var(--warning-color);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: white;
+    }
+    
+    .access-denied {
+      text-align: center;
+      padding: 3rem;
+      color: var(--danger-color);
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar-container"></div>
+
+  <div class="main-content">
+    <div class="content-header">
+      <h1>⚙️ System Configuration</h1>
+      <p>Manage global settings, security policies, and backups</p>
+    </div>
+    
+    <div id="accessDenied" class="access-denied" style="display: none;">
+      <h2>⛔ Access Denied</h2>
+      <p>You do not have permission to view this page. Only Administrators can access system settings.</p>
+    </div>
+
+    <div id="settingsContainer" class="settings-container" style="display: none;">
+      <div class="settings-nav">
+        <a href="#general" class="active" onclick="showSection('general')">General Settings</a>
+        <a href="#security" onclick="showSection('security')">Security & Policy</a>
+        <a href="#backup" onclick="showSection('backup')">Backup & Restore</a>
+        <a href="#audit" onclick="showSection('audit')">Audit Logs</a>
+      </div>
+      
+      <div class="settings-content">
+        <!-- GENERAL SETTINGS -->
+        <div id="generalSection">
+          <h2 class="section-title">General Configuration</h2>
+          <form id="generalForm" onsubmit="saveSettings(event)">
+            <div class="config-group">
+              <label>System Name</label>
+              <input type="text" name="system_name" class="form-control" value="Office Automation System">
+            </div>
+            
+            <div class="config-group">
+              <label>Maintenance Mode</label>
+              <small>Prevent users from logging in during maintenance</small>
+              <label class="toggle-switch">
+                <input type="checkbox" name="maintenance_mode">
+                <span class="slider"></span>
+              </label>
+            </div>
+            
+            <div class="config-group">
+              <label>Allow User Registration</label>
+              <small>If disabled, only admins can create users</small>
+              <label class="toggle-switch">
+                <input type="checkbox" name="allow_registration">
+                <span class="slider"></span>
+              </label>
+            </div>
+            
+            <button type="submit" class="btn-primary">Save Changes</button>
+          </form>
+        </div>
+
+        <!-- SECURITY SETTINGS -->
+        <div id="securitySection" style="display: none;">
+          <h2 class="section-title">Security Policies</h2>
+          <form id="securityForm" onsubmit="saveSettings(event)">
+            <div class="config-group">
+              <label>Password Expiry (Days)</label>
+              <input type="number" name="password_expiry" value="90" min="0">
+            </div>
+            
+            <div class="config-group">
+              <label>Session Timeout (Minutes)</label>
+              <input type="number" name="session_timeout" value="30" min="5">
+            </div>
+            
+            <div class="config-group">
+              <label>Two-Factor Authentication (2FA)</label>
+              <small>Enforce 2FA for all admin accounts</small>
+              <label class="toggle-switch">
+                <input type="checkbox" name="enforce_2fa">
+                <span class="slider"></span>
+              </label>
+            </div>
+            
+            <button type="submit" class="btn-primary">Save Policies</button>
+          </form>
+        </div>
+
+        <!-- BACKUP SETTINGS -->
+        <div id="backupSection" style="display: none;">
+          <h2 class="section-title">Database Backup & Restore</h2>
+          
+          <div style="margin-bottom: 2rem;">
+            <button onclick="createBackup()" class="btn-primary" style="background-color: #28a745;">
+              📥 Create New Backup
+            </button>
+          </div>
+          
+          <h3>Available Backups</h3>
+          <div id="backupList" class="backup-list">
+            <div style="padding: 1rem; text-align: center; color: #666;">Loading backups...</div>
+          </div>
+        </div>
+
+        <!-- AUDIT LOGS -->
+        <div id="auditSection" style="display: none;">
+          <h2 class="section-title">System Audit Logs</h2>
+          <div style="overflow-x: auto;">
+            <table class="table" style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                  <th style="padding: 12px; text-align: left;">Time</th>
+                  <th style="padding: 12px; text-align: left;">User</th>
+                  <th style="padding: 12px; text-align: left;">Action</th>
+                  <th style="padding: 12px; text-align: left;">Module</th>
+                  <th style="padding: 12px; text-align: left;">Details</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableBody">
+                <tr><td colspan="5" style="text-align: center; padding: 20px;">Loading logs...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div> <!-- Close flex container -->
+
+  <script>
+    const user = JSON.parse(localStorage.getItem('user'));
+    
+    // Load Sidebar
+    fetch('sidebar.html')
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('sidebar-container').innerHTML = data;
+            const scripts = document.getElementById('sidebar-container').getElementsByTagName('script');
+            for(let script of scripts) {
+                eval(script.innerText);
+            }
+        });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!user || user.role !== 'Admin') {
+        document.getElementById('accessDenied').style.display = 'block';
+        return;
+      }
+      
+      document.getElementById('settingsContainer').style.display = 'grid';
+      loadSettings();
+      loadBackups();
+    });
+
+    function showSection(sectionId) {
+      // Update Nav
+      document.querySelectorAll('.settings-nav a').forEach(el => el.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      // Show Content
+      ['general', 'security', 'backup', 'audit'].forEach(id => {
+        document.getElementById(id + 'Section').style.display = 'none';
+      });
+      document.getElementById(sectionId + 'Section').style.display = 'block';
+
+      if(sectionId === 'audit') {
+        loadAuditLogs();
+      }
+    }
+
+    function loadAuditLogs() {
+      fetch('http://localhost:3000/api/settings/audit-logs', {
+        headers: { 'userid': user.id, 'Authorization': user.token }
+      })
+      .then(res => res.json())
+      .then(logs => {
+        const tbody = document.getElementById('auditTableBody');
+        if (logs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;">No logs found</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = logs.map(log => `
+          <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 12px;">${new Date(log.createdAt).toLocaleString()}</td>
+            <td style="padding: 12px;">${log.userName || 'Unknown'} <br><small style="color:#888">${log.email || ''}</small></td>
+            <td style="padding: 12px;"><span class="badge">${log.action}</span></td>
+            <td style="padding: 12px;">${log.module}</td>
+            <td style="padding: 12px;">${log.details}</td>
+          </tr>
+        `).join('');
+      });
+    }
+
+    function loadSettings() {
+      fetch('http://localhost:3000/api/settings/config', {
+        headers: { 'userid': user.id, 'Authorization': user.token }
+      })
+      .then(res => res.json())
+      .then(settings => {
+        // Populate forms
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+          if (settings[input.name]) {
+            if (input.type === 'checkbox') {
+              input.checked = settings[input.name] === 'true';
+            } else {
+              input.value = settings[input.name];
+            }
+          }
+        });
+      });
+    }
+
+    function saveSettings(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const data = {};
+      
+      // Handle inputs manually to catch unchecked checkboxes
+      form.querySelectorAll('input').forEach(input => {
+        if (input.type === 'checkbox') {
+          data[input.name] = input.checked;
+        } else {
+          data[input.name] = input.value;
+        }
+      });
+
+      fetch('http://localhost:3000/api/settings/config', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'userid': user.id,
+          'Authorization': user.token
+        },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(res => alert('Settings saved successfully!'))
+      .catch(err => alert('Error saving settings'));
+    }
+
+    function createBackup() {
+      if(!confirm('Create a new database backup?')) return;
+      
+      fetch('http://localhost:3000/api/settings/backup', {
+        method: 'POST',
+        headers: { 'userid': user.id, 'Authorization': user.token }
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message);
+        loadBackups();
+      });
+    }
+
+    function loadBackups() {
+      fetch('http://localhost:3000/api/settings/backups', {
+        headers: { 'userid': user.id, 'Authorization': user.token }
+      })
+      .then(res => res.json())
+      .then(backups => {
+        const list = document.getElementById('backupList');
+        if (backups.length === 0) {
+          list.innerHTML = '<div style="padding: 1rem; text-align: center;">No backups found</div>';
+          return;
+        }
+        
+        list.innerHTML = backups.map(b => `
+          <div class="backup-item">
+            <div>
+              <strong>${b.filename}</strong><br>
+              <small>${new Date(b.created).toLocaleString()} • ${b.size}</small>
+            </div>
+            <button class="btn-restore" onclick="restoreBackup('${b.filename}')">Restore</button>
+          </div>
+        `).join('');
+      });
+    }
+
+    function restoreBackup(filename) {
+      if(!confirm('WARNING: This will overwrite the current database. This action cannot be undone. Are you sure?')) return;
+      
+      fetch('http://localhost:3000/api/settings/restore', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'userid': user.id,
+          'Authorization': user.token
+        },
+        body: JSON.stringify({ filename })
+      })
+      .then(res => res.json())
+      .then(data => alert(data.message));
+    }
+
+    function logout() {
+      localStorage.removeItem('user');
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

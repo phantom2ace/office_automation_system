@@ -27,45 +27,36 @@ Your messaging system has been converted from Node.js/Express backend to **Fireb
 
 ---
 
-## Step 3: Get Your Firebase Config
+## Step 3: Get Your Firebase Config (For Frontend)
 
 1. In Firebase Console, go to **Project Settings** (⚙️ icon)
 2. Under **"Your apps"**, click the **Web icon** (</> symbol)
 3. Register your app: Name it `office-automation-web`
 4. Copy the entire `firebaseConfig` object
-
-Example:
-```javascript
-const firebaseConfig = {
-  apiKey: "AIzaSyDxxx...",
-  authDomain: "office-automation-123.firebaseapp.com",
-  databaseURL: "https://office-automation-123.firebaseio.com",
-  projectId: "office-automation-123",
-  storageBucket: "office-automation-123.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef123456"
-};
-```
+5. **Save this for later** (you will need to paste it into `frontend/messages.html`)
 
 ---
 
-## Step 4: Update messages.html
+## Step 4: Get Service Account Key (For Backend)
 
+1. In Firebase Console, go to **Project Settings** (⚙️ icon) -> **Service accounts** tab.
+2. Click **"Generate new private key"**.
+3. Confirm by clicking **"Generate key"**.
+4. A file will download (e.g., `office-automation-firebase-adminsdk-xxxxx.json`).
+5. **Rename this file** to `service-account-key.json`.
+6. **Move this file** to your `backend/` folder.
+
+---
+
+## Step 5: Update Code
+
+### A. Frontend Config
 1. Open `frontend/messages.html`
-2. Find the `firebaseConfig` object (around line 630)
+2. Find the `firebaseConfig` object (around line 640)
 3. Replace with your actual Firebase config from Step 3
 
-```javascript
-const firebaseConfig = {
-  apiKey: "YOUR_ACTUAL_API_KEY",  // Replace
-  authDomain: "your-actual-domain.firebaseapp.com",  // Replace
-  databaseURL: "your-actual-database-url",  // Replace
-  projectId: "your-actual-project-id",  // Replace
-  storageBucket: "your-actual-bucket",  // Replace
-  messagingSenderId: "your-actual-sender-id",  // Replace
-  appId: "your-actual-app-id"  // Replace
-};
-```
+### B. Backend Config
+1. Ensure `backend/service-account-key.json` exists (from Step 4).
 
 ---
 

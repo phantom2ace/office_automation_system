@@ -1,274 +1,255 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Leave Management - Office Automation</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .leave-balance-card {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 24px;
+      border-radius: var(--radius-md);
+      margin-bottom: 24px;
+    }
+  </style>
 </head>
 <body>
-  <!-- Sidebar Navigation -->
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <h2>🏢 OfficeApp</h2>
-    </div>
-    
-    <div class="sidebar-nav">
-      <a href="dashboard.html" id="nav-dashboard">📊 Dashboard</a>
-      <a href="tasks.html" id="nav-tasks">✅ Tasks</a>
-      <a href="messages.html" id="nav-messages">✉️ Messages</a>
-      <a href="documents.html" id="nav-documents">📄 Documents</a>
-      <a href="calendar.html" id="nav-calendar">📅 Calendar</a>
-      <a href="leaves.html" id="nav-leaves" class="active">🏖️ Leaves</a>
-      <a href="employees.html" id="nav-employees">👥 Employees</a>
-      <a href="finance.html" id="nav-finance">💰 Finance</a>
-      <a href="inventory.html" id="nav-inventory">📦 Inventory</a>
-      <a href="resources.html" id="nav-resources">⚙️ Resources</a>
-      <a href="performance.html" id="nav-performance">⭐ Performance</a>
-      <a href="analytics.html" id="nav-analytics">📈 Analytics</a>
-      <a href="user-management.html" id="nav-users" style="display: none;">👤 User Management</a>
-    </div>
+  <div style="display: flex;">
+    <div id="sidebar-container"></div>
 
-    <div class="sidebar-footer">
-      <button onclick="logout(event)">🚪 Logout</button>
+    <div class="main-content">
+      <div class="container">
+        <div id="message" class="alert" style="display: none;"></div>
+
+        <div class="header-actions">
+          <h1>🏖️ Leave Management</h1>
+        </div>
+
+        <!-- Leave Application -->
+        <div class="card">
+          <h3 class="mb-4">📝 Apply for Leave</h3>
+          <form id="leaveForm" onsubmit="applyLeave(event)">
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div class="form-group">
+                <label>Leave Type</label>
+                <select id="leaveType" required>
+                  <option value="Sick Leave">Sick Leave</option>
+                  <option value="Casual Leave">Casual Leave</option>
+                  <option value="Annual Leave">Annual Leave</option>
+                  <option value="Maternity Leave">Maternity Leave</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Number of Days</label>
+                <input type="number" id="leaveDays" min="0.5" step="0.5" required>
+              </div>
+            </div>
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div class="form-group">
+                <label>Start Date</label>
+                <input type="date" id="startDate" required>
+              </div>
+              <div class="form-group">
+                <label>End Date</label>
+                <input type="date" id="endDate" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Reason</label>
+              <textarea id="leaveReason" rows="3" placeholder="Reason for leave" required></textarea>
+            </div>
+            <button type="submit" class="btn-primary">Submit Application</button>
+          </form>
+        </div>
+
+        <!-- My Leaves -->
+        <div class="card">
+          <h3 class="mb-4">📋 My Leave History</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Dates</th>
+                  <th>Days</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="myLeaves">
+                <tr>
+                  <td colspan="5" class="text-center">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Manager Approvals -->
+        <div id="approvalSection" class="card" style="display: none;">
+          <h3 class="mb-4">✅ Pending Approvals</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Type</th>
+                  <th>Dates</th>
+                  <th>Days</th>
+                  <th>Reason</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="approvalTable">
+                <tr><td colspan="6" class="text-center">No pending approvals</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="main-content">
-    <div class="container">
-    <div id="message" class="alert" style="display: none;"></div>
-
-    <div class="card">
-      <h3>📝 Apply for Leave</h3>
-      <div class="grid">
-        <div>
-          <label>Leave Type</label>
-          <select id="leaveType">
-            <option value="Sick Leave">Sick Leave</option>
-            <option value="Casual Leave">Casual Leave</option>
-            <option value="Annual Leave">Annual Leave</option>
-            <option value="Maternity Leave">Maternity Leave</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-        <div>
-          <label>Number of Days</label>
-          <input type="number" id="leaveDays" min="0.5" step="0.5">
-        </div>
-      </div>
-      <div class="grid">
-        <div>
-          <label>Start Date</label>
-          <input type="date" id="startDate">
-        </div>
-        <div>
-          <label>End Date</label>
-          <input type="date" id="endDate">
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Reason</label>
-        <textarea id="leaveReason" rows="3" placeholder="Reason for leave"></textarea>
-      </div>
-      <button onclick="applyLeave()">Apply for Leave</button>
-    </div>
-
-    <div class="card">
-      <h3>📋 My Leave Requests</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>From Date</th>
-            <th>To Date</th>
-            <th>Days</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="myLeaves">
-          <tr>
-            <td colspan="6" style="text-align: center;">Loading...</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div id="approvalSection" class="card" style="display: none;">
-      <h3>✅ Leave Approvals (Manager Only)</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Employee</th>
-            <th>Leave Type</th>
-            <th>From Date</th>
-            <th>To Date</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="leaveApprovals">
-          <tr>
-            <td colspan="6" style="text-align: center;">Loading...</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
+  <script src="/socket.io/socket.io.js"></script>
   <script>
-    let currentUser = null;
+    // Load Sidebar
+    fetch('sidebar.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('sidebar-container').innerHTML = data;
+        const scripts = document.getElementById('sidebar-container').getElementsByTagName('script');
+        for(let script of scripts) {
+          eval(script.innerText);
+        }
+      });
 
-    function loadPage() {
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (!user) {
-        window.location.href = "index.html";
-        return;
-      }
-      currentUser = user;
-      loadMyLeaves();
-      if (user.role === "Manager") {
-        document.getElementById("approvalSection").style.display = "block";
-        loadApprovals();
-      }
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) window.location.href = 'index.html';
+
+    // Show Manager Section
+    if (['Manager', 'Admin'].includes(user.role)) {
+      document.getElementById('approvalSection').style.display = 'block';
+      loadApprovals();
+    }
+
+    loadMyLeaves();
+
+    function applyLeave(e) {
+      e.preventDefault();
+      
+      const data = {
+        leaveType: document.getElementById('leaveType').value,
+        days: document.getElementById('leaveDays').value,
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value,
+        reason: document.getElementById('leaveReason').value
+      };
+
+      fetch('/api/leaves', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'userid': user.id },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(() => {
+        alert('Leave application submitted!');
+        document.getElementById('leaveForm').reset();
+        loadMyLeaves();
+      })
+      .catch(err => console.error(err));
     }
 
     function loadMyLeaves() {
-      fetch(`http://localhost:3000/api/leaves/my`, {
-        headers: {
-          "userid": currentUser.id,
-          "role": currentUser.role
-        }
+      fetch(`/api/leaves/my/${user.id}`, {
+        headers: { 'userid': user.id }
       })
-        .then(res => res.json())
-        .then(leaves => {
-          const tbody = document.getElementById("myLeaves");
-          if (!leaves || leaves.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6">No leave requests yet</td></tr>';
-            return;
-          }
-
-          tbody.innerHTML = leaves.map(l => `
-            <tr>
-              <td>${l.leaveType}</td>
-              <td>${new Date(l.startDate).toLocaleDateString()}</td>
-              <td>${new Date(l.endDate).toLocaleDateString()}</td>
-              <td>${l.days}</td>
-              <td><span class="badge ${l.status.toLowerCase()}">${l.status}</span></td>
-              <td><button style="width: 100%; padding: 5px;">View</button></td>
-            </tr>
-          `).join("");
-        })
-        .catch(err => {
-          console.error(err);
-          document.getElementById("myLeaves").innerHTML = '<tr><td colspan="6" style="color: red;">Error loading leaves</td></tr>';
-        });
+      .then(res => res.json())
+      .then(leaves => {
+        const tbody = document.getElementById('myLeaves');
+        if (leaves.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center">No leave history</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = leaves.map(l => `
+          <tr>
+            <td style="font-weight: 500;">${l.leaveType}</td>
+            <td>${l.startDate} to ${l.endDate}</td>
+            <td>${l.days}</td>
+            <td><span class="badge ${getStatusClass(l.status)}">${l.status}</span></td>
+            <td>
+              ${l.status === 'Pending' ? `<button class="btn-danger" style="padding: 4px 8px; font-size: 0.8rem;" onclick="cancelLeave(${l.id})">Cancel</button>` : '-'}
+            </td>
+          </tr>
+        `).join('');
+      });
     }
 
     function loadApprovals() {
-      fetch(`http://localhost:3000/api/leaves/all`, {
-        headers: {
-          "userid": currentUser.id,
-          "role": currentUser.role
+      fetch('/api/leaves/pending', {
+        headers: { 'userid': user.id, 'role': user.role, 'department': user.department }
+      })
+      .then(res => res.json())
+      .then(leaves => {
+        const tbody = document.getElementById('approvalTable');
+        if (leaves.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center">No pending approvals</td></tr>';
+          return;
         }
+
+        tbody.innerHTML = leaves.map(l => `
+          <tr>
+            <td style="font-weight: 500;">${l.userName}</td>
+            <td>${l.leaveType}</td>
+            <td>${l.startDate} to ${l.endDate}</td>
+            <td>${l.days}</td>
+            <td>${l.reason}</td>
+            <td>
+              <div class="flex gap-2">
+                <button class="btn-primary" style="background: var(--success); border: none; padding: 4px 8px; font-size: 0.8rem;" onclick="updateStatus(${l.id}, 'Approved')">Approve</button>
+                <button class="btn-danger" style="padding: 4px 8px; font-size: 0.8rem;" onclick="updateStatus(${l.id}, 'Rejected')">Reject</button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      });
+    }
+
+    function updateStatus(id, status) {
+      if(!confirm(`Are you sure you want to ${status.toLowerCase()} this leave?`)) return;
+      
+      fetch(`/api/leaves/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'userid': user.id, 'role': user.role },
+        body: JSON.stringify({ status })
       })
-        .then(res => res.json())
-        .then(leaves => {
-          const tbody = document.getElementById("leaveApprovals");
-          const pending = leaves.filter(l => l.status === "Pending");
-          if (!pending || pending.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6">No pending leave requests</td></tr>';
-            return;
-          }
-
-          tbody.innerHTML = pending.map(l => `
-            <tr>
-              <td>${l.employeeName}</td>
-              <td>${l.leaveType}</td>
-              <td>${new Date(l.startDate).toLocaleDateString()}</td>
-              <td>${new Date(l.endDate).toLocaleDateString()}</td>
-              <td><span class="badge pending">Pending</span></td>
-              <td>
-                <button onclick="approveLeave(${l.id}, 'Approved')" style="width: 48%; padding: 5px; background: #28a745;">✓</button>
-                <button onclick="approveLeave(${l.id}, 'Rejected')" style="width: 48%; padding: 5px; background: #dc3545;">✕</button>
-              </td>
-            </tr>
-          `).join("");
+      .then(() => {
+        loadApprovals();
+        // Refresh my leaves if I approved my own (unlikely but possible in dev)
+        loadMyLeaves(); 
+      });
+    }
+    
+    function cancelLeave(id) {
+        if(!confirm('Cancel this leave request?')) return;
+        // Reuse status update logic but setting to Cancelled
+        fetch(`/api/leaves/${id}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'userid': user.id, 'role': user.role }, // User can cancel own
+            body: JSON.stringify({ status: 'Cancelled' })
         })
-        .catch(err => {
-          console.error(err);
-          document.getElementById("leaveApprovals").innerHTML = '<tr><td colspan="6" style="color: red;">Error loading approvals</td></tr>';
-        });
+        .then(() => loadMyLeaves());
     }
 
-    function applyLeave() {
-      const type = document.getElementById("leaveType").value;
-      const startDate = document.getElementById("startDate").value;
-      const endDate = document.getElementById("endDate").value;
-      const days = document.getElementById("leaveDays").value;
-      const reason = document.getElementById("leaveReason").value;
-
-      if (!startDate || !endDate || !days) {
-        showMessage("Please fill in all required fields", "error");
-        return;
-      }
-
-      fetch("http://localhost:3000/api/leaves/apply", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "userid": currentUser.id,
-          "role": currentUser.role
-        },
-        body: JSON.stringify({ leaveType: type, startDate, endDate, days: parseFloat(days), reason })
-      })
-        .then(res => res.json())
-        .then(() => {
-          showMessage("Leave request submitted!", "success");
-          document.getElementById("leaveType").value = "Sick Leave";
-          document.getElementById("startDate").value = "";
-          document.getElementById("endDate").value = "";
-          document.getElementById("leaveDays").value = "";
-          document.getElementById("leaveReason").value = "";
-          loadMyLeaves();
-        })
-        .catch(() => showMessage("Error submitting leave request", "error"));
+    function getStatusClass(s) {
+      if (s === 'Approved') return 'success';
+      if (s === 'Rejected') return 'danger';
+      if (s === 'Cancelled') return 'inactive';
+      return 'warning';
     }
-
-    function approveLeave(leaveId, status) {
-      fetch(`http://localhost:3000/api/leaves/approve`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "userid": currentUser.id,
-          "role": currentUser.role
-        },
-        body: JSON.stringify({ leaveId, status })
-      })
-        .then(res => res.json())
-        .then(() => {
-          showMessage(`Leave ${status}!`, "success");
-          loadApprovals();
-        })
-        .catch(() => showMessage("Error processing leave", "error"));
-    }
-
-    function showMessage(msg, type) {
-      const div = document.getElementById("message");
-      div.textContent = msg;
-      div.className = `alert ${type}`;
-      div.style.display = "block";
-    }
-
-    function logout(e) {
-      e.preventDefault();
-      localStorage.removeItem("user");
-      window.location.href = "index.html";
-    }
-
-    window.onload = loadLeaves;
   </script>
-    </div>
-  </div>
 </body>
 </html>

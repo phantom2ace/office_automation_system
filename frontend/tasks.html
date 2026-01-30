@@ -1,426 +1,356 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tasks - Office Automation</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .task-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+    }
+
+    .tab-container {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .tab-btn.active {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+
+    .priority-select {
+      width: 100%;
+      padding: 10px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
+    }
+
+    .action-btn-group {
+      display: flex;
+      gap: 8px;
+    }
+  </style>
 </head>
 <body>
-  <!-- Sidebar Navigation -->
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <h2>🏢 OfficeApp</h2>
-    </div>
-    
-    <div class="sidebar-nav">
-      <a href="dashboard.html" id="nav-dashboard">📊 Dashboard</a>
-      <a href="tasks.html" id="nav-tasks" class="active">✅ Tasks</a>
-      <a href="messages.html" id="nav-messages">✉️ Messages</a>
-      <a href="documents.html" id="nav-documents">📄 Documents</a>
-      <a href="calendar.html" id="nav-calendar">📅 Calendar</a>
-      <a href="leaves.html" id="nav-leaves">🏖️ Leaves</a>
-      <a href="employees.html" id="nav-employees">👥 Employees</a>
-      <a href="finance.html" id="nav-finance">💰 Finance</a>
-      <a href="inventory.html" id="nav-inventory">📦 Inventory</a>
-      <a href="resources.html" id="nav-resources">⚙️ Resources</a>
-      <a href="performance.html" id="nav-performance">⭐ Performance</a>
-      <a href="analytics.html" id="nav-analytics">📈 Analytics</a>
-      <a href="user-management.html" id="nav-users" style="display: none;">👤 User Management</a>
-    </div>
+  <div style="display: flex;">
+    <div id="sidebar-container"></div>
 
-    <div class="sidebar-footer">
-      <button onclick="logout(event)">🚪 Logout</button>
-    </div>
-  </div>
+    <div class="main-content">
+      <div class="container">
+        <div id="message" class="alert" style="display: none;"></div>
 
-  <div class="main-content">
-    <div class="container">
-    <div id="message" class="alert" style="display: none;"></div>
-
-    <!-- Only show to Admin -->
-    <div id="adminTaskCreation" style="display: none;">
-      <div class="card">
-        <h3>🆕 Create Task (Admin Only)</h3>
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-          <button type="button" onclick="toggleTab('manual')" id="btn-manual" style="flex: 1; background: #667eea;">Manual Assignment</button>
-          <button type="button" onclick="toggleTab('auto')" id="btn-auto" style="flex: 1; background: #6c757d;">Auto Assignment</button>
+        <div class="header-actions">
+          <h1>✅ Task Management</h1>
+          <button class="btn-primary" onclick="showCreateTaskModal()">+ New Task</button>
         </div>
 
-        <!-- Manual Assignment Tab -->
-        <form id="taskForm" style="display: block;">
-          <div class="form-group">
-            <label>Title</label>
-          <input type="text" id="taskTitle" required>
+        <!-- Admin Task Creation Section -->
+        <div id="adminTaskCreation" style="display: none;" class="task-card">
+          <h3 class="mb-4">🆕 Create & Assign Task</h3>
+          
+          <div class="tab-container">
+            <button type="button" onclick="toggleTab('manual')" id="btn-manual" class="tab-btn active">Manual Assignment</button>
+            <button type="button" onclick="toggleTab('auto')" id="btn-auto" class="tab-btn">Auto Assignment (AI)</button>
+          </div>
+
+          <!-- Manual Assignment Tab -->
+          <form id="taskForm" style="display: block;">
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="taskTitle" required>
+              </div>
+              <div class="form-group">
+                <label>Department</label>
+                <input type="text" id="taskDept" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <textarea id="taskDesc" rows="3"></textarea>
+            </div>
+             <div class="form-group">
+                <label>Assign To (Employee ID)</label>
+                <input type="number" id="taskAssignee" placeholder="Optional">
+              </div>
+            <button type="button" class="btn-primary" onclick="createTask()">Create Task</button>
+          </form>
+
+          <!-- Auto Assignment Tab -->
+          <form id="autoTaskForm" style="display: none;">
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="autoTaskTitle" required>
+              </div>
+              <div class="form-group">
+                <label>Department</label>
+                <select id="autoTaskDept" class="priority-select" required>
+                  <option value="">Select Department</option>
+                  <option value="IT">IT</option>
+                  <option value="HR">HR</option>
+                  <option value="Finance">Finance</option>
+                  <option value="Sales">Sales</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <textarea id="autoTaskDesc" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Priority</label>
+              <select id="taskPriority" class="priority-select">
+                <option value="Low">Low</option>
+                <option value="Normal" selected>Normal</option>
+                <option value="High">High</option>
+                <option value="Urgent">Urgent</option>
+              </select>
+            </div>
+            <button type="button" class="btn-primary" style="background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); border: none;" onclick="autoAssignTask()">✨ Auto Assign to Best Fit</button>
+            <div id="autoAssignResult" style="margin-top: 10px; display: none;" class="alert"></div>
+          </form>
         </div>
-        <div class="form-group">
-          <label>Description</label>
-          <textarea id="taskDesc" rows="4"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Department</label>
-          <input type="text" id="taskDept" required>
-        </div>
-        <button type="button" onclick="createTask()">Create Task</button>
-      </form>
 
-      <!-- Auto Assignment Tab -->
-      <form id="autoTaskForm" style="display: none;">
-        <div class="form-group">
-          <label>Title</label>
-          <input type="text" id="autoTaskTitle" required>
-        </div>
-        <div class="form-group">
-          <label>Description</label>
-          <textarea id="autoTaskDesc" rows="4"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Department</label>
-          <select id="autoTaskDept" required>
-            <option value="">Select Department</option>
-            <option value="IT">IT</option>
-            <option value="HR">HR</option>
-            <option value="Finance">Finance</option>
-            <option value="Sales">Sales</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Priority</label>
-          <select id="taskPriority">
-            <option value="Low">Low</option>
-            <option value="Normal" selected>Normal</option>
-            <option value="High">High</option>
-            <option value="Urgent">Urgent</option>
-          </select>
-        </div>
-        <button type="button" onclick="autoAssignTask()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">Auto Assign to Available Employee</button>
-        <div id="autoAssignResult" style="margin-top: 10px; display: none;" class="alert"></div>
-      </form>
-    </div>
-
-    <div class="card">
-      <h3>👥 Department Availability</h3>
-      <select id="deptFilter" onchange="loadDepartmentAvailability()">
-        <option value="">Select Department</option>
-        <option value="IT">IT</option>
-        <option value="HR">HR</option>
-        <option value="Finance">Finance</option>
-        <option value="Sales">Sales</option>
-      </select>
-      <div id="availabilityTable" style="margin-top: 15px;"></div>
-    </div>
-    </div>
-
-    <!-- For Non-Admin Users -->
-    <div id="nonAdminView" style="display: none;">
-      <div class="card">
-        <h3 style="color: #667eea;">📋 Task Management</h3>
-        <p>Only Admin users can create and assign tasks. Track your assigned tasks below:</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>📝 My Tasks</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="taskList">
-          <tr>
-            <td colspan="4" style="text-align: center;">Loading...</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <div id="taskModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal()">&times;</span>
-      <h3>Respond to Task</h3>
-      <div class="form-group">
-        <label>Response</label>
-        <select id="responseStatus">
-          <option value="Accepted">Accept</option>
-          <option value="Declined">Decline</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Reason (if declining)</label>
-        <textarea id="responseReason" rows="3"></textarea>
-      </div>
-      <div class="form-actions">
-        <button onclick="submitResponse()">Submit</button>
-        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    let currentUser = null;
-    let selectedTask = null;
-
-    // Toggle between manual and auto assignment tabs
-    function toggleTab(tab) {
-      const taskForm = document.getElementById("taskForm");
-      const autoTaskForm = document.getElementById("autoTaskForm");
-      const btnManual = document.getElementById("btn-manual");
-      const btnAuto = document.getElementById("btn-auto");
-
-      if (tab === 'manual') {
-        taskForm.style.display = 'block';
-        autoTaskForm.style.display = 'none';
-        btnManual.style.background = '#667eea';
-        btnAuto.style.background = '#6c757d';
-      } else {
-        taskForm.style.display = 'none';
-        autoTaskForm.style.display = 'block';
-        btnManual.style.background = '#6c757d';
-        btnAuto.style.background = '#667eea';
-      }
-    }
-
-    // Auto-assign task to available employee
-    function autoAssignTask() {
-      const title = document.getElementById("autoTaskTitle").value;
-      const description = document.getElementById("autoTaskDesc").value;
-      const department = document.getElementById("autoTaskDept").value;
-      const priority = document.getElementById("taskPriority").value;
-
-      if (!title || !department) {
-        alert("Please fill in all required fields");
-        return;
-      }
-
-      fetch("http://localhost:3000/api/tasks/auto-assign", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "userid": currentUser.id,
-          "role": currentUser.role
-        },
-        body: JSON.stringify({ title, description, department, priority })
-      })
-        .then(res => res.json())
-        .then(data => {
-          const resultDiv = document.getElementById("autoAssignResult");
-          if (data.error) {
-            resultDiv.className = "alert error";
-            resultDiv.textContent = data.error;
-          } else {
-            resultDiv.className = "alert success";
-            resultDiv.textContent = `✓ Task assigned to ${data.assignedTo} (${data.currentWorkload} current tasks)`;
-            document.getElementById("autoTaskTitle").value = "";
-            document.getElementById("autoTaskDesc").value = "";
-            document.getElementById("autoTaskDept").value = "";
-          }
-          resultDiv.style.display = "block";
-          setTimeout(() => { resultDiv.style.display = "none"; }, 5000);
-        })
-        .catch(err => {
-          const resultDiv = document.getElementById("autoAssignResult");
-          resultDiv.className = "alert error";
-          resultDiv.textContent = "Error auto-assigning task";
-          resultDiv.style.display = "block";
-        });
-    }
-
-    // Load department availability
-    function loadDepartmentAvailability() {
-      const dept = document.getElementById("deptFilter").value;
-      if (!dept) {
-        document.getElementById("availabilityTable").innerHTML = "";
-        return;
-      }
-
-      fetch(`http://localhost:3000/api/employees/department/${dept}/availability`, {
-        headers: {
-          "userid": currentUser.id,
-          "role": currentUser.role
-        }
-      })
-        .then(res => res.json())
-        .then(data => {
-          const table = `
+        <!-- Task List -->
+        <div class="card">
+          <h3 class="mb-4">📋 Your Tasks</h3>
+          <div class="table-container">
             <table>
               <thead>
                 <tr>
-                  <th>Employee</th>
-                  <th>Availability</th>
-                  <th>Pending Tasks</th>
+                  <th>Title</th>
+                  <th>Department</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                ${data.employees.map(emp => `
-                  <tr>
-                    <td>${emp.name}</td>
-                    <td><span class="badge ${emp.availability.toLowerCase().replace(' ', '-')}">${emp.availability}</span></td>
-                    <td>${emp.pendingTasks}</td>
-                  </tr>
-                `).join("")}
+              <tbody id="taskTableBody">
+                <tr><td colspan="5" class="text-center">Loading tasks...</td></tr>
               </tbody>
             </table>
-            <p style="margin-top: 10px; font-size: 12px; color: #666;">
-              Available: ${data.available} | Busy: ${data.busy} | On Leave: ${data.onLeave}
-            </p>
-          `;
-          document.getElementById("availabilityTable").innerHTML = table;
-        })
-        .catch(err => console.error(err));
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Load Sidebar
+    fetch('sidebar.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('sidebar-container').innerHTML = data;
+        const scripts = document.getElementById('sidebar-container').getElementsByTagName('script');
+        for(let script of scripts) {
+          eval(script.innerText);
+        }
+      });
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) window.location.href = 'index.html';
+
+    // Show Admin Features
+    if (['Admin', 'Manager'].includes(user.role)) {
+      document.getElementById('adminTaskCreation').style.display = 'block';
     }
-    function loadTasks() {
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (!user) {
-        window.location.href = "index.html";
-        return;
+
+    function toggleTab(tab) {
+      if (tab === 'manual') {
+        document.getElementById('taskForm').style.display = 'block';
+        document.getElementById('autoTaskForm').style.display = 'none';
+        document.getElementById('btn-manual').classList.add('active');
+        document.getElementById('btn-auto').classList.remove('active');
+      } else {
+        document.getElementById('taskForm').style.display = 'none';
+        document.getElementById('autoTaskForm').style.display = 'block';
+        document.getElementById('btn-manual').classList.remove('active');
+        document.getElementById('btn-auto').classList.add('active');
       }
-      currentUser = user;
+    }
 
-      // Show task creation only to Admin
-      const isAdmin = user.role === "Admin";
-      document.getElementById("adminTaskCreation").style.display = isAdmin ? "block" : "none";
-      document.getElementById("nonAdminView").style.display = isAdmin ? "none" : "block";
+    function loadTasks() {
+      fetch(`/api/tasks/${user.id}`, {
+        headers: { 'userid': user.id, 'role': user.role }
+      })
+      .then(res => res.json())
+      .then(tasks => {
+        const tbody = document.getElementById('taskTableBody');
+        if (tasks.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center">No tasks found</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = tasks.map(task => `
+          <tr>
+            <td style="font-weight: 500;">
+              ${task.title}
+              <div style="font-size: 0.8rem; color: var(--text-muted);">${task.description || ''}</div>
+            </td>
+            <td>${task.department || '-'}</td>
+            <td><span class="badge ${getPriorityClass(task.priority)}">${task.priority || 'Normal'}</span></td>
+            <td><span class="badge ${getStatusClass(task.status)}">${task.status}</span></td>
+            <td>
+              <div class="action-btn-group">
+                ${getActionButtons(task)}
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      })
+      .catch(err => console.error(err));
+    }
 
-      fetch(`http://localhost:3000/api/tasks/${user.id}`, {
-        headers: {
-          "userid": user.id,
-          "role": user.role
+    function getPriorityClass(p) {
+      if (p === 'Urgent') return 'danger';
+      if (p === 'High') return 'warning';
+      return 'info';
+    }
+
+    function getStatusClass(s) {
+      if (s === 'Completed') return 'success';
+      if (s === 'In Progress') return 'warning';
+      if (s === 'Declined') return 'danger';
+      return 'inactive'; // Pending
+    }
+
+    function getActionButtons(task) {
+      if (task.status === 'Pending') {
+        return `
+          <button class="btn-sm success" onclick="respondTask(${task.id}, 'Accepted')">Accept</button>
+          <button class="btn-sm danger" onclick="respondTask(${task.id}, 'Declined')">Decline</button>
+        `;
+      } else if (task.status === 'Accepted' || task.status === 'In Progress') {
+        return `
+          <button class="btn-sm success" onclick="respondTask(${task.id}, 'Completed')">Mark Done</button>
+        `;
+      }
+      return '<span class="text-muted">-</span>';
+    }
+
+    function respondTask(taskId, status) {
+      let reason = '';
+      if (status === 'Declined') {
+        reason = prompt("Please provide a reason for declining:");
+        if (!reason) return; // Cancelled
+      }
+
+      fetch('/api/tasks/respond', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'userid': user.id 
+        },
+        body: JSON.stringify({ taskId, status, reason })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error);
+        } else {
+          if (data.reassignedTo) {
+             alert(`Task declined and auto-reassigned to ${data.reassignedTo}`);
+          } else {
+             alert(`Task ${status}`);
+          }
+          loadTasks();
         }
       })
-        .then(res => res.json())
-        .then(tasks => {
-          const tbody = document.getElementById("taskList");
-          if (!tasks || tasks.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No tasks assigned</td></tr>';
-            return;
-          }
-
-          tbody.innerHTML = tasks.map(task => `
-            <tr>
-              <td>${task.title}</td>
-              <td>${task.description || '-'}</td>
-              <td><span class="badge ${task.status.toLowerCase()}">${task.status}</span></td>
-              <td>
-                <button onclick="openModal(${task.id})" style="width: 100%; padding: 5px;">
-                  ${task.status === 'Pending' ? 'Respond' : 'View'}
-                </button>
-              </td>
-            </tr>
-          `).join("");
-        })
-        .catch(err => {
-          console.error(err);
-          document.getElementById("taskList").innerHTML = '<tr><td colspan="4">Error loading tasks</td></tr>';
-        });
+      .catch(err => console.error(err));
     }
 
     function createTask() {
-      const title = document.getElementById("taskTitle").value;
-      const desc = document.getElementById("taskDesc").value;
-      const dept = document.getElementById("taskDept").value;
+      const title = document.getElementById('taskTitle').value;
+      const desc = document.getElementById('taskDesc').value;
+      const dept = document.getElementById('taskDept').value;
+      const assignee = document.getElementById('taskAssignee').value;
 
-      if (!title || !dept) {
-        showMessage("Please fill in all required fields", "error");
-        return;
-      }
-
-      fetch("http://localhost:3000/api/tasks/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "userid": currentUser.id,
-          "role": currentUser.role
+      fetch('/api/tasks/create', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json', 
+            'userid': user.id,
+            'role': user.role 
         },
-        body: JSON.stringify({
-          title, description: desc, department: dept, assignedTo: currentUser.id
-        })
+        body: JSON.stringify({ title, description: desc, department: dept, assignedTo: assignee })
       })
-        .then(res => res.json())
-        .then(() => {
-          showMessage("Task created successfully!", "success");
-          document.getElementById("taskForm").reset();
-          loadTasks();
-        })
-        .catch(err => showMessage("Error creating task", "error"));
+      .then(res => res.json())
+      .then(data => {
+        if(data.error) alert(data.error);
+        else {
+            alert('Task created!');
+            loadTasks();
+        }
+      });
     }
 
-    function openModal(taskId) {
-      selectedTask = taskId;
-      document.getElementById("taskModal").classList.add("active");
-    }
+    function autoAssignTask() {
+      const title = document.getElementById('autoTaskTitle').value;
+      const desc = document.getElementById('autoTaskDesc').value;
+      const dept = document.getElementById('autoTaskDept').value;
+      const priority = document.getElementById('taskPriority').value;
+      
+      const resultDiv = document.getElementById('autoAssignResult');
+      resultDiv.style.display = 'block';
+      resultDiv.className = 'alert info';
+      resultDiv.textContent = '🤖 AI is analyzing workload to find best employee...';
 
-    function closeModal() {
-      document.getElementById("taskModal").classList.remove("active");
-      selectedTask = null;
-    }
-
-    function submitResponse() {
-      const status = document.getElementById("responseStatus").value;
-      const reason = document.getElementById("responseReason").value;
-
-      fetch("http://localhost:3000/api/tasks/respond", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "userid": currentUser.id,
-          "role": currentUser.role
-        },
-        body: JSON.stringify({
-          taskId: selectedTask,
-          status, reason
-        })
+      fetch('/api/tasks/auto-assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'userid': user.id },
+        body: JSON.stringify({ title, description: desc, department: dept, priority })
       })
-        .then(res => res.json())
-        .then(data => {
-          if (status === "Declined") {
-            if (data.reassignedTo) {
-              showMessage(`✓ Task declined and automatically reassigned to ${data.reassignedTo}`, "success");
-            } else if (data.needsAdminAction) {
-              showMessage(`✓ Task declined. No available staff - Admin will handle reassignment.`, "info");
-            } else {
-              showMessage("Task declined", "success");
-            }
-          } else {
-            showMessage(`✓ Task ${status}!`, "success");
-          }
-          closeModal();
-          loadTasks();
-        })
-        .catch(() => showMessage("Error submitting response", "error"));
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+             resultDiv.className = 'alert error';
+             resultDiv.textContent = data.error;
+        } else {
+            resultDiv.className = 'alert success';
+            resultDiv.textContent = `✅ Assigned to ${data.assignedTo || 'Employee'} (Load: ${data.currentWorkload || 0} tasks)`;
+            loadTasks();
+        }
+      })
+      .catch(err => {
+        resultDiv.className = 'alert error';
+        resultDiv.textContent = 'Failed to auto-assign';
+      });
+    }
+    
+    function showCreateTaskModal() {
+        if (['Admin', 'Manager'].includes(user.role)) {
+             document.getElementById('adminTaskCreation').scrollIntoView({behavior: "smooth"});
+        } else {
+            alert("Only Admins and Managers can create tasks.");
+        }
     }
 
-    function showMessage(msg, type) {
-      const div = document.getElementById("message");
-      div.textContent = msg;
-      div.className = `alert ${type}`;
-      div.style.display = "block";
-    }
-
-    function logout(e) {
-      e.preventDefault();
-      localStorage.removeItem("user");
-      window.location.href = "index.html";
-    }
-
-    window.onload = function() {
-      loadTasks();
-      // Show user management link for admins
-      const user = JSON.parse(localStorage.getItem('user'));
-      if (user && user.role === 'Admin') {
-        document.getElementById('nav-users').style.display = 'block';
-      }
-      // Hide employees link for non-authorized users
-      if (user && !(user.role === 'Admin' || user.department === 'HR')) {
-        const empLink = document.getElementById('nav-employees');
-        if (empLink) empLink.style.display = 'none';
-      }
-    };
+    window.onload = loadTasks;
   </script>
-  </div>
 </body>
 </html>

@@ -9,6 +9,7 @@
     <a href="tasks.html" id="nav-tasks">✅ Tasks</a>
     <a href="messages.html" id="nav-messages">✉️ Messages</a>
     <a href="documents.html" id="nav-documents">📄 Documents</a>
+    <a href="sales.html" id="nav-sales">💼 Sales / CRM</a>
     <a href="calendar.html" id="nav-calendar">📅 Calendar</a>
     <a href="leaves.html" id="nav-leaves">🏖️ Leaves</a>
     <a href="employees.html" id="nav-employees">👥 Employees</a>
@@ -17,6 +18,10 @@
     <a href="resources.html" id="nav-resources">⚙️ Resources</a>
     <a href="performance.html" id="nav-performance">⭐ Performance</a>
     <a href="analytics.html" id="nav-analytics">📈 Analytics</a>
+    <a href="knowledgebase.html" id="nav-knowledgebase">📚 Knowledge Base</a>
+    <a href="helpdesk.html" id="nav-helpdesk">🎫 Help Desk</a>
+    <a href="manager-tools.html" id="nav-manager-tools" style="display: none;">👔 Manager Tools</a>
+    <a href="user-management.html" id="nav-users" style="display: none;">👤 User Management</a>
   </div>
 
   <div class="sidebar-footer">
@@ -39,4 +44,17 @@
 
   // Set active item on page load
   setActiveSidebarItem();
+
+  // Show Manager Tools if user is Manager or Admin
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  if (['Manager', 'Admin'].includes(currentUser.role)) {
+    const managerLink = document.getElementById('nav-manager-tools');
+    if (managerLink) managerLink.style.display = 'block';
+  }
+
+  // Show User Management if user is Admin
+  if (currentUser.role === 'Admin') {
+    const usersLink = document.getElementById('nav-users');
+    if (usersLink) usersLink.style.display = 'block';
+  }
 </script>

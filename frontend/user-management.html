@@ -639,6 +639,8 @@
       document.getElementById('editUserForm').addEventListener('submit', updateUser);
     }
 
+    let allUsers = [];
+
     async function loadUsers() {
       document.getElementById('mainContent').style.display = 'none';
       document.getElementById('loadingDiv').style.display = 'block';
@@ -654,8 +656,9 @@
         const data = await response.json();
 
         if (data.success) {
-          displayUsers(data.users);
-          updateStats(data.users);
+          allUsers = data.users; // Cache users
+          displayUsers(allUsers);
+          updateStats(allUsers);
           document.getElementById('mainContent').style.display = 'block';
           document.getElementById('loadingDiv').style.display = 'none';
         } else {
@@ -681,6 +684,9 @@
         return;
       }
 
+      // Use DocumentFragment for better performance
+      const fragment = document.createDocumentFragment();
+
       users.forEach(user => {
         const createdDate = new Date(user.createdAt).toLocaleDateString();
         const roleClass = user.role.toLowerCase();
@@ -705,29 +711,21 @@
             <button class="btn-small btn-delete" onclick="deleteUser(${user.id}, '${user.name}')">Delete</button>
           </div>
         `;
-        usersList.appendChild(userCard);
+        fragment.appendChild(userCard);
       });
+      
+      usersList.appendChild(fragment);
     }
 
     function filterUsers() {
       const dept = document.getElementById('departmentFilter').value;
       const role = document.getElementById('roleFilter').value;
 
-      fetch('/api/users/all', {
-        headers: {
-          'userid': localStorage.getItem('userId'),
-          'userrole': localStorage.getItem('userRole'),
-        },
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            let filtered = data.users;
-            if (dept) filtered = filtered.filter(u => u.department === dept);
-            if (role) filtered = filtered.filter(u => u.role === role);
-            displayUsers(filtered);
-          }
-        });
+      let filtered = allUsers;
+      if (dept) filtered = filtered.filter(u => u.department === dept);
+      if (role) filtered = filtered.filter(u => u.role === role);
+      
+      displayUsers(filtered);
     }
 
     async function createUser(e) {
@@ -760,7 +758,7 @@
         if (data.success) {
           showAlert('✓ User created successfully!', 'success', 'createAlert');
           document.getElementById('createUserForm').reset();
-          setTimeout(() => loadUsers(), 1500);
+          loadUsers(); // Reload immediately
         } else {
           showAlert('Error: ' + data.message, 'error', 'createAlert');
         }

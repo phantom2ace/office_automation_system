@@ -2,6 +2,24 @@ const express = require("express");
 const router = express.Router();
 const db = require("../database");
 
+// Get all users (Simplified for Chat/Staff view)
+router.get("/", (req, res) => {
+  const userId = req.headers.userid;
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  db.all(
+    `SELECT id, name, email, department, role, status FROM users WHERE status = 'Active' ORDER BY name`,
+    (err, users) => {
+      if (err) {
+        return res.status(500).json({ success: false, message: err.message });
+      }
+      res.json(users);
+    }
+  );
+});
+
 // Create new user (Admin only)
 router.post("/create", (req, res) => {
   const { name, email, password, department, role } = req.body;

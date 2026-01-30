@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Tools - Office Automation</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .tools-container {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 2rem;
+        }
+        .tab {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+        .tab.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+        .delegation-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 1rem;
+            align-items: end;
+        }
+        .feedback-item {
+            border-bottom: 1px solid #eee;
+            padding: 1rem 0;
+        }
+        .feedback-item:last-child {
+            border-bottom: none;
+        }
+        .feedback-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        .rating-stars {
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div style="display: flex;">
+        <!-- Sidebar will be loaded here -->
+        <div id="sidebar-container"></div>
+
+        <div class="main-content" style="flex: 1; margin-left: 250px;">
+            <div class="tools-container">
+                <div class="content-header">
+                    <h1>👔 Manager Tools</h1>
+                    <p>Manage delegations and review system feedback</p>
+                </div>
+
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('delegation')">My Delegations</div>
+                    <div class="tab" onclick="switchTab('feedback')">Feedback Review</div>
+                </div>
+
+                <!-- DELEGATION TAB -->
+                <div id="delegationTab" class="tab-content active">
+                    <div class="card">
+                        <h3>Set New Delegation</h3>
+                        <p style="color: #666; margin-bottom: 1rem;">Assign another user to approve requests on your behalf for a specific period.</p>
+                        <form onsubmit="handleDelegateSubmit(event)" class="delegation-form">
+                            <div class="form-group">
+                                <label>Delegate To</label>
+                                <select id="delegateSelect" required class="form-control">
+                                    <option value="">Select User...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Start Date</label>
+                                <input type="date" id="startDate" required class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>End Date</label>
+                                <input type="date" id="endDate" required class="form-control">
+                            </div>
+                            <button type="submit" class="btn-primary">Set Delegate</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h3>Active Delegations</h3>
+                        <table class="table" style="width: 100%;">
+                            <thead>
+                                <tr style="text-align: left;">
+                                    <th>Delegate</th>
+                                    <th>Period</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="delegationTable">
+                                <tr><td colspan="4">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- FEEDBACK TAB -->
+                <div id="feedbackTab" class="tab-content">
+                    <div class="card">
+                        <h3>System Feedback & Suggestions</h3>
+                        <div id="feedbackList">
+                            <div style="text-align: center; padding: 2rem;">Loading feedback...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load Sidebar
+        fetch('sidebar.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('sidebar-container').innerHTML = data;
+                const scripts = document.getElementById('sidebar-container').getElementsByTagName('script');
+                for(let script of scripts) {
+                    eval(script.innerText);
+                }
+            });
+
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        // Initialize
+        if (user.role === 'Manager' || user.role === 'Admin') {
+            loadUsers();
+            loadDelegations();
+            loadFeedback();
+        } else {
+            document.querySelector('.tools-container').innerHTML = '<div class="alert alert-danger">Access Denied. Managers only.</div>';
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        function loadUsers() {
+            fetch('http://localhost:3000/api/users', {
+                headers: { 'userid': user.id, 'Authorization': user.token }
+            })
+            .then(res => res.json())
+            .then(users => {
+                const select = document.getElementById('delegateSelect');
+                users.forEach(u => {
+                    if (u.id !== user.id) {
+                        select.innerHTML += `<option value="${u.id}">${u.name} (${u.role})</option>`;
+                    }
+                });
+            });
+        }
+
+        function loadDelegations() {
+            fetch('http://localhost:3000/api/approvals/delegations', {
+                headers: { 'userid': user.id, 'Authorization': user.token }
+            })
+            .then(res => res.json())
+            .then(delegations => {
+                const tbody = document.getElementById('delegationTable');
+                if (delegations.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No active delegations</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = delegations.map(d => `
+                    <tr>
+                        <td>${d.delegateName}</td>
+                        <td>${d.startDate} to ${d.endDate}</td>
+                        <td><span class="badge badge-success">${d.status}</span></td>
+                        <td><button class="btn-sm btn-danger" onclick="cancelDelegation(${d.id})">Cancel</button></td>
+                    </tr>
+                `).join('');
+            });
+        }
+
+        function handleDelegateSubmit(e) {
+            e.preventDefault();
+            const data = {
+                delegateId: document.getElementById('delegateSelect').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value
+            };
+
+            fetch('http://localhost:3000/api/approvals/delegate', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'userid': user.id,
+                    'Authorization': user.token 
+                },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(() => {
+                alert('Delegation set successfully');
+                loadDelegations();
+                e.target.reset();
+            });
+        }
+
+        function loadFeedback() {
+            fetch('http://localhost:3000/api/feedback', {
+                headers: { 'userid': user.id, 'Authorization': user.token }
+            })
+            .then(res => res.json())
+            .then(feedbacks => {
+                const container = document.getElementById('feedbackList');
+                if (feedbacks.length === 0) {
+                    container.innerHTML = '<div style="text-align: center;">No feedback received yet.</div>';
+                    return;
+                }
+
+                container.innerHTML = feedbacks.map(f => `
+                    <div class="feedback-item">
+                        <div class="feedback-header">
+                            <strong>${f.type} - ${f.userName || 'Anonymous'}</strong>
+                            <span class="rating-stars">${'★'.repeat(f.rating || 0)}</span>
+                        </div>
+                        <p>${f.content}</p>
+                        <div style="font-size: 0.85rem; color: #888; margin-top: 0.5rem;">
+                            Status: <span class="badge">${f.status}</span> • ${new Date(f.createdAt).toLocaleDateString()}
+                            ${f.status === 'New' ? `<button onclick="markFeedbackRead(${f.id})" style="margin-left: 10px; cursor: pointer;">Mark as Reviewed</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            });
+        }
+
+        function markFeedbackRead(id) {
+            fetch(`http://localhost:3000/api/feedback/${id}`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'userid': user.id,
+                    'Authorization': user.token 
+                },
+                body: JSON.stringify({ status: 'Reviewed' })
+            })
+            .then(() => loadFeedback());
+        }
+    </script>
+</body>
+</html>
