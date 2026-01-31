@@ -130,7 +130,7 @@ router.post('/calculate', auth(), (req, res) => {
       db.run(
         `INSERT INTO payroll_records (userId, paymentMonth, baseSalary, allowances, grossSalary, taxAmount, otherDeductions, netSalary, status, processedBy, processedAt)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-        [userId, paymentMonth, baseSalary, allowances, grossSalary, taxAmount, otherDeductions, netSalary, 'Processed', processedBy],
+        [userId, paymentMonth, baseSalary, allowances, grossSalary, taxAmount, otherDeductions, netSalary, 'Pending Payment', processedBy],
         function(err) {
           if (err) return res.status(500).json({ error: err.message });
           res.json({
@@ -149,12 +149,70 @@ router.post('/calculate', auth(), (req, res) => {
   );
 });
 
-// Get all payroll records for HR (for processing)
+// Process payment for a payroll record (Finance)
+router.post('/pay/:id', auth(), (req, res) => {
+  const recordId = req.params.id;
+  const processedBy = req.user.id;
+
+  // Verify permission (Admin or Finance)
+  if (req.user.role !== 'Admin' && req.user.department !== 'Finance') {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+
+  // 1. Get record details
+  db.get(
+    `SELECT pr.*, u.name as userName, u.department as userDept 
+     FROM payroll_records pr
+     JOIN users u ON pr.userId = u.id
+     WHERE pr.id = ?`,
+    [recordId],
+    (err, record) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!record) return res.status(404).json({ error: 'Payroll record not found' });
+      
+      if (record.status === 'Paid') {
+        return res.status(400).json({ error: 'Record already paid' });
+      }
+      
+      const description = `Salary Payment - ${record.paymentMonth} - ${record.userName}`;
+      
+      db.serialize(() => {
+        // Update payroll status
+        db.run(
+          `UPDATE payroll_records SET status = 'Paid', processedAt = CURRENT_TIMESTAMP WHERE id = ?`,
+          [recordId],
+          (err) => {
+            if (err) {
+               console.error("Error updating payroll:", err);
+               return res.status(500).json({ error: 'Failed to update payroll status' });
+            }
+
+            // Insert finance record
+            db.run(
+              `INSERT INTO finance (description, amount, type, category, department, reference, status, createdBy, createdAt)
+               VALUES (?, ?, 'Expense', 'Salary', ?, ?, 'Approved', ?, CURRENT_TIMESTAMP)`,
+              [description, record.netSalary, record.userDept, `Payroll #${recordId}`, processedBy],
+              (err) => {
+                if (err) {
+                   console.error("Error creating finance record:", err);
+                   return res.status(500).json({ error: 'Failed to create finance record' });
+                }
+                res.json({ message: 'Payment processed successfully' });
+              }
+            );
+          }
+        );
+      });
+    }
+  );
+});
+
+// Get all payroll records for HR (for processing) and Finance (for payment)
 router.get('/', auth(), (req, res) => {
   const role = req.user.role;
   const department = req.user.department;
 
-  if (role !== 'Admin' && department !== 'HR') {
+  if (role !== 'Admin' && department !== 'HR' && department !== 'Finance') {
     return res.status(403).json({ error: 'Access denied' });
   }
 

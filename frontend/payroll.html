@@ -124,6 +124,16 @@
       color: #0c5460;
     }
 
+    .badge.pending-payment {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .badge.paid {
+      background: #28a745;
+      color: white;
+    }
+
     button {
       padding: 10px 20px;
       border: none;
@@ -502,16 +512,18 @@
             return;
           }
 
-          tbody.innerHTML = records.map(r => `
+          tbody.innerHTML = records.map(r => {
+            const statusClass = r.status.toLowerCase().replace(' ', '-');
+            return `
             <tr>
               <td>${r.paymentMonth}</td>
               <td>₹${r.baseSalary.toFixed(2)}</td>
               <td>₹${r.grossSalary.toFixed(2)}</td>
               <td>₹${r.taxAmount.toFixed(2)}</td>
               <td><strong>₹${r.netSalary.toFixed(2)}</strong></td>
-              <td><span class="badge ${r.status.toLowerCase()}">${r.status}</span></td>
+              <td><span class="badge ${statusClass}">${r.status}</span></td>
             </tr>
-          `).join('');
+          `}).join('');
         })
         .catch(err => console.error('Error loading payroll records:', err));
     }

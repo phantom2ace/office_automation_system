@@ -67,6 +67,27 @@
           </div>
         </div>
 
+        <!-- Pending Payroll Section -->
+        <div id="payrollSection" class="card" style="display: none; margin-bottom: 24px;">
+          <h3 class="mb-4">💸 Pending Payroll Payments</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Month</th>
+                  <th>Net Salary</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="payrollList">
+                <tr><td colspan="5" class="text-center">No pending payments</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="grid" style="grid-template-columns: 1fr 2fr; gap: 24px;">
           <!-- Add Transaction Form -->
           <div class="card">
@@ -141,6 +162,70 @@
       currentUser = user;
       load();
       loadTransactions();
+      loadPayroll();
+    }
+
+    function loadPayroll() {
+      // Only for Finance or Admin
+      if (currentUser.role !== 'Admin' && currentUser.department !== 'Finance') return;
+      
+      document.getElementById('payrollSection').style.display = 'block';
+      
+      fetch('/api/payroll', {
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role,
+          "department": currentUser.department
+        }
+      })
+      .then(res => res.json())
+      .then(records => {
+         const pending = records.filter(r => r.status === 'Pending Payment');
+         const tbody = document.getElementById('payrollList');
+         
+         if (pending.length === 0) {
+           tbody.innerHTML = '<tr><td colspan="5" class="text-center">No pending payments</td></tr>';
+           return;
+         }
+         
+         tbody.innerHTML = pending.map(r => `
+           <tr>
+             <td>${r.name || 'Unknown'}</td>
+             <td>${r.paymentMonth}</td>
+             <td>₹${r.netSalary.toFixed(2)}</td>
+             <td><span class="badge" style="background: #fff3cd; color: #856404;">${r.status}</span></td>
+             <td>
+               <button onclick="paySalary(${r.id})" class="btn-success" style="padding: 5px 10px; font-size: 0.9rem;">Release Payment</button>
+             </td>
+           </tr>
+         `).join('');
+      });
+    }
+
+    function paySalary(id) {
+      if(!confirm('Are you sure you want to release this salary payment?')) return;
+      
+      fetch(`/api/payroll/pay/${id}`, {
+        method: 'POST',
+        headers: {
+          "userid": currentUser.id,
+          "role": currentUser.role,
+          "department": currentUser.department,
+          "Content-Type": "application/json"
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.error) {
+          alert(data.error);
+        } else {
+          alert('Payment Released Successfully!');
+          loadPayroll();
+          loadTransactions(); // Refresh transactions as well
+          load(); // Refresh summary
+        }
+      })
+      .catch(err => console.error(err));
     }
 
     function save(e) {
