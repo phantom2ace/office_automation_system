@@ -76,4 +76,22 @@ router.post("/approve", auth("Manager"), (req, res) => {
   );
 });
 
+// Cancel leave (by user)
+router.post("/cancel", auth(), (req, res) => {
+  const { leaveId } = req.body;
+  const userId = req.user.id;
+
+  db.run(
+    `UPDATE leaves SET status = 'Cancelled' 
+     WHERE id = ? AND userId = ? AND status = 'Pending'`,
+    [leaveId, userId],
+    function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      if (this.changes === 0) return res.status(400).json({ error: "Cannot cancel leave. Either it's not yours, not found, or already processed." });
+      
+      res.json({ message: "Leave cancelled successfully" });
+    }
+  );
+});
+
 module.exports = router;

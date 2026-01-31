@@ -6,9 +6,30 @@
     <title>Messages - Office Automation</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
+        /* Full height layout adjustments */
+        body {
+            overflow: hidden;
+        }
+
+        .main-content {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding-bottom: 0 !important;
+        }
+
+        .container {
+            height: 100% !important;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 20px;
+        }
+
         .chat-layout {
             display: flex;
-            height: calc(100vh - 100px); /* Adjust for header/padding */
+            flex: 1;
+            height: auto; /* Fill remaining space */
             background: var(--bg-card);
             border-radius: var(--radius-md);
             border: 1px solid var(--border-color);
@@ -197,7 +218,7 @@
     </style>
 </head>
 <body>
-    <div style="display: flex;">
+    <div style="display: flex; height: 100vh; overflow: hidden;">
         <!-- Sidebar container -->
         <div id="sidebar-container"></div>
 
@@ -271,8 +292,10 @@
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) window.location.href = 'index.html';
 
-        const socket = io();
-        let currentReceiverId = null;
+        window.socket = io();
+        const socket = window.socket;
+        
+        window.currentChatId = null;
         let allUsers = [];
 
         // Socket Connection Status
@@ -298,32 +321,75 @@
 
         // Listen for incoming messages
         socket.on('receive_message', (data) => {
-            if (currentReceiverId && (data.senderId == currentReceiverId || data.receiverId == currentReceiverId)) {
+            if (window.currentChatId && (data.senderId == window.currentChatId || data.receiverId == window.currentChatId)) {
                 appendMessage(data, data.senderId == user.id ? 'sent' : 'received');
                 scrollToBottom();
+                
+                // If we are chatting with this person, mark as read immediately
+                if (data.senderId == window.currentChatId) {
+                    fetch(`/api/messages/mark-read/${data.senderId}`, {
+                        method: 'PUT',
+                        headers: { 'userid': user.id, 'role': user.role }
+                    }).then(() => {
+                         if (window.updateUnreadCount) window.updateUnreadCount();
+                    });
+                }
             } else {
-                // Show notification dot on user list
+                // Update local unread map
+                if (!unreadMap[data.senderId]) unreadMap[data.senderId] = 0;
+                unreadMap[data.senderId]++;
+                renderUsers(allUsers); // Re-render to show new count
+
+                // Show notification dot on user list (fallback)
                 const userItem = document.getElementById(`user-${data.senderId}`);
                 if (userItem) {
                     userItem.style.background = 'rgba(99, 102, 241, 0.2)'; // Highlight
-                    // Optional: Play sound
                 }
             }
         });
 
-        // Load Users
-        fetch('/api/users', {
-            headers: { 'userid': user.id, 'Authorization': user.token }
-        })
-        .then(res => res.json())
-        .then(users => {
-            allUsers = users.filter(u => u.id !== user.id); // Exclude self
-            renderUsers(allUsers);
-        })
-        .catch(err => {
-            console.error("Error loading users:", err);
-            document.getElementById('usersList').innerHTML = '<div style="padding: 20px; text-align: center; color: var(--danger);">Failed to load users</div>';
-        });
+        // Load Users and Unread Counts
+        function loadData() {
+            const headers = { 
+                'userid': user.id, 
+                'role': user.role 
+            };
+
+            Promise.all([
+                fetch('/api/users', { headers }).then(r => {
+                    if (!r.ok) throw new Error('Failed to load users: ' + r.statusText);
+                    return r.json();
+                }),
+                fetch('/api/messages/unread/senders', { headers }).then(r => {
+                    if (!r.ok) throw new Error('Failed to load unread counts: ' + r.statusText);
+                    return r.json();
+                })
+            ])
+            .then(([users, unreadData]) => {
+                if (!Array.isArray(users)) throw new Error('Invalid users response');
+                
+                allUsers = users.filter(u => u.id !== user.id); // Exclude self
+                
+                unreadMap = {};
+                if(Array.isArray(unreadData)) {
+                    unreadData.forEach(item => {
+                        unreadMap[item.senderId] = item.count;
+                    });
+                }
+
+                renderUsers(allUsers);
+            })
+            .catch(err => {
+                console.error("Error loading data:", err);
+                document.getElementById('usersList').innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: var(--danger);">
+                        <p>Failed to load data</p>
+                        <button class="btn-secondary" onclick="loadData()">Retry</button>
+                    </div>`;
+            });
+        }
+        
+        loadData(); // Initial load
 
         function renderUsers(users) {
             const list = document.getElementById('usersList');
@@ -331,25 +397,62 @@
                 list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">No users found</div>';
                 return;
             }
-            list.innerHTML = users.map(u => `
+            list.innerHTML = users.map(u => {
+                const unreadCount = unreadMap[u.id] || 0;
+                const badgeHtml = unreadCount > 0 
+                    ? `<div style="background: #ff4757; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold;">${unreadCount > 99 ? '99+' : unreadCount}</div>` 
+                    : '';
+
+                return `
                 <div class="user-item" id="user-${u.id}" onclick="selectUser(${u.id}, '${u.name}', '${u.department || 'Employee'}')">
                     <div class="avatar">${u.name.charAt(0).toUpperCase()}</div>
                     <div style="flex: 1;">
                         <h4 style="margin: 0; font-size: 0.95rem; color: var(--text-main);">${u.name}</h4>
                         <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">${u.department || 'Employee'}</p>
                     </div>
+                    ${badgeHtml}
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function filterUsers(query) {
-            const filtered = allUsers.filter(u => u.name.toLowerCase().includes(query.toLowerCase()));
-            renderUsers(filtered);
+            if (!query) {
+                renderUsers(allUsers);
+                return;
+            }
+            
+            // Client-side quick filter for small lists
+            if (allUsers.length < 50) {
+                const filtered = allUsers.filter(u => 
+                    u.name.toLowerCase().includes(query.toLowerCase()) || 
+                    (u.email && u.email.toLowerCase().includes(query.toLowerCase()))
+                );
+                renderUsers(filtered);
+            } 
+            
+            // Server-side search for larger lists or when specific query is needed
+            if (query.length >= 2) {
+                fetch(`/api/messages/search/staff?query=${encodeURIComponent(query)}`, {
+                    headers: { 'userid': user.id, 'Authorization': user.token }
+                })
+                .then(res => res.json())
+                .then(users => {
+                     // Merge with local unread counts if possible, or just render
+                     renderUsers(users);
+                })
+                .catch(err => console.error("Search error:", err));
+            }
         }
 
         function selectUser(userId, userName, userDept) {
-            currentReceiverId = userId;
+            window.currentChatId = userId;
             
+            // Clear local unread count and update UI
+            if (unreadMap[userId]) {
+                unreadMap[userId] = 0;
+                renderUsers(allUsers);
+            }
+
             // UI Updates
             document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
             const activeItem = document.getElementById(`user-${userId}`);
@@ -420,11 +523,11 @@
             const input = document.getElementById('messageInput');
             const content = input.value.trim();
             
-            if (!content || !currentReceiverId) return;
+            if (!content || !window.currentChatId) return;
 
             const messageData = {
                 senderId: user.id,
-                receiverId: currentReceiverId,
+                receiverId: window.currentChatId,
                 content: content,
                 timestamp: new Date().toISOString()
             };

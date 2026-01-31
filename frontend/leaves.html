@@ -148,23 +148,30 @@
         reason: document.getElementById('leaveReason').value
       };
 
-      fetch('/api/leaves', {
+      fetch('/api/leaves/apply', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'userid': user.id },
+        headers: { 'Content-Type': 'application/json', 'userid': user.id, 'role': user.role },
         body: JSON.stringify(data)
       })
-      .then(res => res.json())
-      .then(() => {
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to submit application');
+        return res.json();
+      })
+      .then(data => {
+        if (data.error) throw new Error(data.error);
         alert('Leave application submitted!');
         document.getElementById('leaveForm').reset();
         loadMyLeaves();
       })
-      .catch(err => console.error(err));
+      .catch(err => {
+        console.error(err);
+        alert('Error submitting application: ' + err.message);
+      });
     }
 
     function loadMyLeaves() {
-      fetch(`/api/leaves/my/${user.id}`, {
-        headers: { 'userid': user.id }
+      fetch('/api/leaves/my', {
+        headers: { 'userid': user.id, 'role': user.role }
       })
       .then(res => res.json())
       .then(leaves => {
@@ -189,11 +196,14 @@
     }
 
     function loadApprovals() {
-      fetch('/api/leaves/pending', {
+      fetch('/api/leaves/all', {
         headers: { 'userid': user.id, 'role': user.role, 'department': user.department }
       })
       .then(res => res.json())
-      .then(leaves => {
+      .then(allLeaves => {
+        // Filter only pending leaves
+        const leaves = allLeaves.filter(l => l.status === 'Pending');
+        
         const tbody = document.getElementById('approvalTable');
         if (leaves.length === 0) {
           tbody.innerHTML = '<tr><td colspan="6" class="text-center">No pending approvals</td></tr>';
@@ -202,7 +212,7 @@
 
         tbody.innerHTML = leaves.map(l => `
           <tr>
-            <td style="font-weight: 500;">${l.userName}</td>
+            <td style="font-weight: 500;">${l.employeeName || 'Unknown'}</td>
             <td>${l.leaveType}</td>
             <td>${l.startDate} to ${l.endDate}</td>
             <td>${l.days}</td>
@@ -221,27 +231,43 @@
     function updateStatus(id, status) {
       if(!confirm(`Are you sure you want to ${status.toLowerCase()} this leave?`)) return;
       
-      fetch(`/api/leaves/${id}/status`, {
-        method: 'PATCH',
+      fetch('/api/leaves/approve', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json', 'userid': user.id, 'role': user.role },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ leaveId: id, status: status })
       })
-      .then(() => {
-        loadApprovals();
-        // Refresh my leaves if I approved my own (unlikely but possible in dev)
-        loadMyLeaves(); 
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert('Error: ' + data.error);
+        } else {
+          loadApprovals();
+          loadMyLeaves();
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Failed to update status');
       });
     }
     
     function cancelLeave(id) {
         if(!confirm('Cancel this leave request?')) return;
-        // Reuse status update logic but setting to Cancelled
-        fetch(`/api/leaves/${id}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', 'userid': user.id, 'role': user.role }, // User can cancel own
-            body: JSON.stringify({ status: 'Cancelled' })
+        
+        fetch('/api/leaves/cancel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'userid': user.id, 'role': user.role },
+            body: JSON.stringify({ leaveId: id })
         })
-        .then(() => loadMyLeaves());
+        .then(res => res.json())
+        .then(data => {
+            if(data.error) {
+                alert("Error: " + data.error);
+            } else {
+                loadMyLeaves();
+            }
+        })
+        .catch(err => alert("Request failed"));
     }
 
     function getStatusClass(s) {

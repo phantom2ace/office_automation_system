@@ -552,8 +552,8 @@
       }
       currentUser = user;
 
-      // Check if IT staff
-      const isITStaff = user.department === "IT" && (user.role === "Manager" || user.role === "Admin");
+      // Check if IT staff (Any role in IT department can be an agent)
+      const isITStaff = user.department === "IT";
       
       if (isITStaff) {
         document.getElementById("itStaffView").style.display = "block";

@@ -125,7 +125,8 @@
       });
 
     let currentUser = null;
-    const socket = io();
+    window.socket = io();
+    const socket = window.socket;
 
     socket.on('connect', () => {
         document.getElementById('socketStatus').textContent = 'Online';

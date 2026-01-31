@@ -9,19 +9,19 @@
     <a href="tasks.html" id="nav-tasks">✅ Tasks</a>
     <a href="messages.html" id="nav-messages">✉️ Messages</a>
     <a href="documents.html" id="nav-documents">📄 Documents</a>
-    <a href="sales.html" id="nav-sales">💼 Sales / CRM</a>
+    <a href="sales.html" id="nav-sales" style="display: none;">💼 Sales / CRM</a>
     <a href="calendar.html" id="nav-calendar">📅 Calendar</a>
     <a href="leaves.html" id="nav-leaves">🏖️ Leaves</a>
-    <a href="employees.html" id="nav-employees">👥 Employees</a>
-    <a href="finance.html" id="nav-finance">💰 Finance</a>
-    <a href="inventory.html" id="nav-inventory">📦 Inventory</a>
-    <a href="resources.html" id="nav-resources">⚙️ Resources</a>
-    <a href="performance.html" id="nav-performance">⭐ Performance</a>
-    <a href="analytics.html" id="nav-analytics">📈 Analytics</a>
+    <a href="employees.html" id="nav-employees" style="display: none;">👥 Employees</a>
+    <a href="finance.html" id="nav-finance" style="display: none;">💰 Finance</a>
+    <a href="inventory.html" id="nav-inventory" style="display: none;">📦 Inventory</a>
+    <a href="resources.html" id="nav-resources" style="display: none;">⚙️ Resources</a>
+    <a href="performance.html" id="nav-performance" style="display: none;">⭐ Performance</a>
+    <a href="analytics.html" id="nav-analytics" style="display: none;">📈 Analytics</a>
     <a href="knowledgebase.html" id="nav-knowledgebase">📚 Knowledge Base</a>
     <a href="helpdesk.html" id="nav-helpdesk">🎫 Help Desk</a>
     <a href="manager-tools.html" id="nav-manager-tools" style="display: none;">👔 Manager Tools</a>
-    <a href="user-management.html" id="nav-users" style="display: none;">👤 User Management</a>
+    <a href="user-management.html" id="nav-users" style="display: none;">👤 User & Employees</a>
   </div>
 
   <div class="sidebar-footer">
@@ -31,10 +31,10 @@
 
 <script>
   // Logout function
-  function logout(event) {
+  window.logout = function(event) {
     if(event) event.preventDefault();
     localStorage.removeItem('user');
-    localStorage.removeItem('token'); // In case we use tokens later
+    localStorage.removeItem('token');
     window.location.href = 'index.html';
   }
 
@@ -50,19 +50,87 @@
     }
   }
 
-  // Set active item on page load
+  // Configure Sidebar Visibility
+  function configureSidebar() {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return; // Not logged in
+
+    const user = JSON.parse(userStr);
+    const role = user.role;
+    const dept = user.department;
+
+    // Helper to show element
+    const show = (id) => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'flex'; // sidebar links are usually block or flex
+    };
+
+    // 1. ADMIN - Sees Everything
+    if (role === 'Admin') {
+      ['nav-sales', 'nav-employees', 'nav-finance', 'nav-inventory', 
+       'nav-resources', 'nav-performance', 'nav-analytics', 
+       'nav-manager-tools', 'nav-users'].forEach(show);
+      return;
+    }
+
+    // 2. MANAGER - Sees Manager Tools + Department Tools
+    if (role === 'Manager') {
+      ['nav-manager-tools', 'nav-performance', 'nav-employees'].forEach(show);
+      
+      // Department specifics for Managers
+      if (dept === 'Sales') { show('nav-sales'); show('nav-analytics'); }
+      if (dept === 'Finance') { show('nav-finance'); }
+      if (dept === 'IT') { show('nav-resources'); show('nav-inventory'); }
+      if (dept === 'Operations') { show('nav-inventory'); }
+      if (dept === 'Marketing') { show('nav-analytics'); }
+      // HR Managers already see 'nav-employees' from general manager rule
+    }
+
+    // 3. STAFF - Sees Department Tools
+    if (role === 'Staff') {
+      if (dept === 'Sales') { show('nav-sales'); }
+      if (dept === 'Finance') { show('nav-finance'); }
+      if (dept === 'HR') { show('nav-employees'); }
+      if (dept === 'IT') { show('nav-resources'); show('nav-inventory'); }
+      if (dept === 'Operations') { show('nav-inventory'); }
+    }
+  }
+
+  // Initialize
   setActiveSidebarItem();
+  configureSidebar();
 
-  // Show Manager Tools if user is Manager or Admin
-  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-  if (['Manager', 'Admin'].includes(currentUser.role)) {
-    const managerLink = document.getElementById('nav-manager-tools');
-    if (managerLink) managerLink.style.display = 'block';
-  }
+  // Unread Messages Counter
+  window.updateUnreadCount = function() {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return;
+    const user = JSON.parse(userStr);
 
-  // Show User Management if user is Admin
-  if (currentUser.role === 'Admin') {
-    const usersLink = document.getElementById('nav-users');
-    if (usersLink) usersLink.style.display = 'block';
-  }
+    fetch('/api/messages/unread/count', {
+      headers: { 'userid': user.id, 'role': user.role }
+    })
+    .then(res => res.json())
+    .then(data => {
+      const badge = document.getElementById('unread-msg-count');
+      if (badge) {
+        if (data.count > 0) {
+          badge.textContent = data.count > 99 ? '99+' : data.count;
+          badge.style.display = 'inline-block';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+    })
+    .catch(console.error);
+  };
+  
+  // Poll every 30 seconds as backup to sockets
+  setInterval(updateUnreadCount, 30000);
+
+  // Load Notification System
+  (function() {
+      const script = document.createElement('script');
+      script.src = 'js/notification-system.js';
+      document.head.appendChild(script);
+  })();
 </script>

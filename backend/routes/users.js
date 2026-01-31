@@ -19,7 +19,7 @@ router.get("/", auth(), (req, res) => {
 
 // Create new user (Admin only)
 router.post("/create", auth("Admin"), (req, res) => {
-  const { name, email, password, department, role } = req.body;
+  const { name, email, password, department, role, phone, designation, reportingManager } = req.body;
   // Admin check handled by middleware
 
   // Validate required fields
@@ -54,9 +54,9 @@ router.post("/create", auth("Admin"), (req, res) => {
 
     // Insert new user
     db.run(
-      `INSERT INTO users (name, email, password, department, role, status, availability, createdAt)
-       VALUES (?, ?, ?, ?, ?, 'Active', 'Available', datetime('now'))`,
-      [name, email, password, department, role],
+      `INSERT INTO users (name, email, password, department, role, phone, designation, reportingManager, status, availability, createdAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Active', 'Available', datetime('now'))`,
+      [name, email, password, department, role, phone, designation, reportingManager],
       function (err) {
         if (err) {
           return res.status(500).json({ success: false, message: err.message });
@@ -72,6 +72,9 @@ router.post("/create", auth("Admin"), (req, res) => {
             email,
             department,
             role,
+            phone,
+            designation,
+            reportingManager,
             status: "Active",
             availability: "Available",
           },
@@ -86,7 +89,7 @@ router.get("/all", auth("Admin"), (req, res) => {
   // Admin check handled by middleware
 
   db.all(
-    `SELECT id, name, email, department, role, status, availability, createdAt FROM users ORDER BY id`,
+    `SELECT id, name, email, department, role, phone, designation, reportingManager, status, availability, createdAt FROM users ORDER BY id`,
     (err, users) => {
       if (err) {
         return res.status(500).json({ success: false, message: err.message });
@@ -104,7 +107,7 @@ router.get("/all", auth("Admin"), (req, res) => {
 // Update user (Admin only)
 router.put("/:userId", auth("Admin"), (req, res) => {
   const { userId } = req.params;
-  const { name, email, password, department, role, status, availability } =
+  const { name, email, password, department, role, phone, designation, reportingManager, status, availability } =
     req.body;
   // Admin check handled by middleware
 
@@ -131,6 +134,18 @@ router.put("/:userId", auth("Admin"), (req, res) => {
   if (role !== undefined) {
     updates.push("role = ?");
     values.push(role);
+  }
+  if (phone !== undefined) {
+    updates.push("phone = ?");
+    values.push(phone);
+  }
+  if (designation !== undefined) {
+    updates.push("designation = ?");
+    values.push(designation);
+  }
+  if (reportingManager !== undefined) {
+    updates.push("reportingManager = ?");
+    values.push(reportingManager);
   }
   if (status !== undefined) {
     updates.push("status = ?");

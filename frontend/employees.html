@@ -11,6 +11,7 @@
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 20px;
       margin-bottom: 24px;
+      margin-top: 30px;
     }
 
     .stat-card {
@@ -43,6 +44,10 @@
       text-transform: uppercase;
       letter-spacing: 1px;
     }
+
+    .header-actions button {
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -55,7 +60,6 @@
 
         <div class="header-actions">
           <h1>👥 Employee Directory</h1>
-          <button class="btn-primary" onclick="showAddEmployeeModal()">+ Add Employee</button>
         </div>
 
         <div class="stats-grid">
@@ -85,7 +89,6 @@
                   <th>Email</th>
                   <th>Phone</th>
                   <th>Status</th>
-                  <th>Action</th>
                 </tr>
               </thead>
               <tbody id="employeeTable">
@@ -100,120 +103,7 @@
     </div>
   </div>
 
-  <!-- Add Employee Modal -->
-  <div id="addEmpModal" class="modal">
-    <div class="modal-content" style="max-width: 600px;">
-      <span class="close" onclick="closeAddModal()">&times;</span>
-      <h2 class="mb-4">Add New Employee</h2>
-      <form onsubmit="addEmployee(event)">
-        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
-          <div class="form-group">
-            <label>Name</label>
-            <input type="text" id="newName" required>
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="newEmail" required>
-          </div>
-        </div>
-        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
-          <div class="form-group">
-            <label>Password</label>
-            <input type="password" id="newPassword" required>
-          </div>
-          <div class="form-group">
-            <label>Role</label>
-            <select id="newRole" required>
-              <option value="Staff">Staff</option>
-              <option value="Manager">Manager</option>
-              <option value="Admin">Admin</option>
-            </select>
-          </div>
-        </div>
-        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
-          <div class="form-group">
-            <label>Department</label>
-            <select id="newDept" required>
-              <option value="IT">IT</option>
-              <option value="HR">HR</option>
-              <option value="Finance">Finance</option>
-              <option value="Sales">Sales</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Operations">Operations</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Designation</label>
-            <input type="text" id="newDesig" placeholder="e.g. Software Engineer" required>
-          </div>
-        </div>
-        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
-          <div class="form-group">
-            <label>Phone</label>
-            <input type="text" id="newPhone" placeholder="+1234567890">
-          </div>
-          <div class="form-group">
-            <label>Reporting Manager ID</label>
-            <input type="number" id="newManagerId" placeholder="Manager ID (Optional)">
-          </div>
-        </div>
-        <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Add Employee</button>
-      </form>
-    </div>
-  </div>
 
-  <!-- Edit Employee Modal -->
-  <div id="editEmpModal" class="modal">
-    <div class="modal-content" style="max-width: 600px;">
-      <span class="close" onclick="closeEditModal()">&times;</span>
-      <h2 class="mb-4">Edit Employee</h2>
-      <form onsubmit="updateEmployee(event)">
-        <input type="hidden" id="editEmpId">
-        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
-          <div class="form-group">
-            <label>Name</label>
-            <input type="text" id="editName" required>
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="editEmail" required>
-          </div>
-        </div>
-        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
-          <div class="form-group">
-            <label>Role</label>
-            <select id="editRole" required>
-              <option value="Staff">Staff</option>
-              <option value="Manager">Manager</option>
-              <option value="Admin">Admin</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Department</label>
-            <select id="editDept" required>
-              <option value="IT">IT</option>
-              <option value="HR">HR</option>
-              <option value="Finance">Finance</option>
-              <option value="Sales">Sales</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Operations">Operations</option>
-            </select>
-          </div>
-        </div>
-        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
-          <div class="form-group">
-            <label>Phone</label>
-            <input type="text" id="editPhone" placeholder="+1234567890">
-          </div>
-          <div class="form-group">
-            <label>Reporting Manager ID</label>
-            <input type="number" id="editManagerId" placeholder="Manager ID (Optional)">
-          </div>
-        </div>
-        <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">Update Employee</button>
-      </form>
-    </div>
-  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
@@ -282,9 +172,6 @@
               <td>${e.email}</td>
               <td>${e.phone || '-'}</td>
               <td><span class="badge ${e.status === 'Active' ? 'success' : 'danger'}">${e.status}</span></td>
-              <td>
-                <button class="btn-sm" onclick="showEditEmployeeModal(${e.id}, '${e.name}', '${e.email}', '${e.role}', '${e.department}', '${e.phone}', '${e.reportingManager}')">✏️</button>
-              </td>
             </tr>
           `).join("");
 
@@ -294,59 +181,7 @@
         .catch(err => console.error("Error loading employees:", err));
     }
 
-    function showEditEmployeeModal(empId, name, email, role, dept, phone, managerId) {
-        document.getElementById('editEmpId').value = empId;
-        document.getElementById('editName').value = name;
-        document.getElementById('editEmail').value = email;
-        document.getElementById('editRole').value = role;
-        document.getElementById('editDept').value = dept;
-        // Handle null/undefined values passed as strings
-        document.getElementById('editPhone').value = (phone && phone !== 'null' && phone !== 'undefined') ? phone : '';
-        document.getElementById('editManagerId').value = (managerId && managerId !== 'null' && managerId !== 'undefined') ? managerId : '';
-        document.getElementById("editEmpModal").style.display = "block";
-    }
 
-    function closeEditModal() {
-        document.getElementById("editEmpModal").style.display = "none";
-    }
-
-    function updateEmployee(e) {
-        e.preventDefault();
-        const empId = document.getElementById('editEmpId').value;
-        const employeeData = {
-            name: document.getElementById("editName").value,
-            email: document.getElementById("editEmail").value,
-            role: document.getElementById("editRole").value,
-            department: document.getElementById("editDept").value,
-            phone: document.getElementById("editPhone").value,
-            reportingManager: document.getElementById("editManagerId").value || null
-        };
-
-        fetch(`/api/employees/${empId}`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "userid": currentUser.id,
-                "role": currentUser.role,
-                "department": currentUser.department
-            },
-            body: JSON.stringify(employeeData)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.error) {
-                alert("Error: " + data.error);
-            } else {
-                alert("Employee updated successfully!");
-                closeEditModal();
-                loadEmployees();
-            }
-        })
-        .catch(err => {
-            console.error("Error updating employee:", err);
-            alert("Failed to update employee");
-        });
-    }
 
     function loadStats() {
       // Dummy implementation for departments and leaves - would come from API in real app
@@ -354,65 +189,7 @@
       document.getElementById("onLeave").textContent = "2";
     }
 
-    function showAddEmployeeModal() {
-      document.getElementById("addEmpModal").style.display = "block";
-    }
 
-    function closeAddModal() {
-      document.getElementById("addEmpModal").style.display = "none";
-    }
-
-    function addEmployee(e) {
-      e.preventDefault();
-      
-      const employeeData = {
-        name: document.getElementById("newName").value,
-        email: document.getElementById("newEmail").value,
-        password: document.getElementById("newPassword").value,
-        role: document.getElementById("newRole").value,
-        department: document.getElementById("newDept").value,
-        designation: document.getElementById("newDesig").value,
-        phone: document.getElementById("newPhone").value,
-        reportingManager: document.getElementById("newManagerId").value || null
-      };
-
-      fetch("/api/employees", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "userid": currentUser.id,
-          "role": currentUser.role,
-          "department": currentUser.department
-        },
-        body: JSON.stringify(employeeData)
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          alert("Error: " + data.error);
-        } else {
-          alert("Employee added successfully!");
-          closeAddModal();
-          loadEmployees();
-          // Reset form
-          e.target.reset();
-        }
-      })
-      .catch(err => {
-        console.error("Error adding employee:", err);
-        alert("Failed to add employee");
-      });
-    }
-
-    // Close modal if clicked outside
-    window.onclick = function(event) {
-      if (event.target == document.getElementById("addEmpModal")) {
-        closeAddModal();
-      }
-      if (event.target == document.getElementById("editEmpModal")) {
-        closeEditModal();
-      }
-    }
 
     window.onload = loadPage;
   </script>
